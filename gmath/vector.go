@@ -1,4 +1,4 @@
-package bmath
+package gmath
 
 type Vector struct {
 	x float64

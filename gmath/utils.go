@@ -1,8 +1,12 @@
-package bmath
+package gmath
 
 import "math"
 
 func Normalice(v *Vector) *Vector {
+	if v.x == 0 && v.y == 0 {
+		return v
+	}
+
 	n := v
 	length := Length(n)
 

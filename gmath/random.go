@@ -1,4 +1,4 @@
-package bmath
+package gmath
 
 import "math/rand"
 
