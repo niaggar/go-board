@@ -4,8 +4,8 @@ type Cell struct {
 	objects []*int
 }
 
-func NewCell() *Cell {
-	return &Cell{}
+func NewCell() Cell {
+	return Cell{}
 }
 
 func (c *Cell) GetObjects() []*int {

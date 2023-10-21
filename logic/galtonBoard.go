@@ -4,15 +4,19 @@ import (
 	"go-board/export"
 	"go-board/gmath"
 	"go-board/logic/config"
+	"go-board/logic/physics"
 	"go-board/models"
 	"math/rand"
 )
 
 type GaltonBoard struct {
-	engine        *Engine
+	engine        physics.Engine
 	exporter      *export.Exporter
 	newConfig     *config.NewConfig
 	currentConfig *config.CurrentConfig
+	maxTime       float64
+	currentTime   float64
+	timeStep      float64
 }
 
 func NewGaltonBoard(route string) *GaltonBoard {
@@ -25,35 +29,60 @@ func NewGaltonBoard(route string) *GaltonBoard {
 	bounds := gmath.NewVector(xSize, ySize)
 	gravity := configuration.Board.Gravity
 	damping := configuration.Board.Damping
-	timeStep := configuration.Board.TimeStep
-	subSteps := configuration.Board.SubSteps
 	exportRoute := configuration.Board.ExportRoute
 
+	maxTime := configuration.Board.MaxTime.MaxTime
+	currentTime := 0.0
+	timeStep := configuration.Board.TimeStep
+	subSteps := configuration.Board.SubSteps
+
 	exporter := export.NewExporter(exportRoute)
-	engine := NewEngine(gravity, bounds, damping, timeStep, subSteps, exporter)
+	engine := physics.NewEngine(gravity, bounds, damping, timeStep, subSteps, exporter)
 
 	return &GaltonBoard{
 		engine:        engine,
 		exporter:      exporter,
 		newConfig:     &configuration,
 		currentConfig: nil,
+		maxTime:       maxTime,
+		currentTime:   currentTime,
+		timeStep:      timeStep,
 	}
 }
 
-func (gb *GaltonBoard) Init() {
-	// Create engine
-	// Create spheres
-	// Create exporter
-}
-
 func (gb *GaltonBoard) Run() {
-	// Run engine
-	// Run exporter
+	gb.exporter.CreateFile()
+
+	for gb.currentTime < gb.maxTime {
+		gb.engine.Update()
+		gb.engine.Export()
+
+		gb.currentTime += gb.timeStep
+		// gb.exporter.Export(gb.engine.Objects, gb.currentTime)
+	}
+
+	gb.exporter.CloseFile()
 }
 
-func (gb *GaltonBoard) Stop() {
-	// Stop engine
-	// Stop exporter
+func (gb *GaltonBoard) BuildSpheres() {
+	if gb.currentConfig != nil {
+
+	} else if gb.newConfig != nil {
+		autoCreation := gb.newConfig.CreateBalls.Creation.Enabled
+		if autoCreation {
+			ballsPoints := buildSpheres(*gb)
+			for _, ball := range *ballsPoints {
+				gb.engine.AddSphere(ball)
+			}
+		} else {
+			ballsPoints := gb.newConfig.CreateBalls.Positions
+			for _, ball := range ballsPoints {
+				sphere := models.NewSphere(ball.Position.X, ball.Position.Y, ball.Radius, ball.Mass, ball.Damping, models.DYNAMIC)
+				sphere.CanCollide = ball.Collision
+				gb.engine.AddSphere(sphere)
+			}
+		}
+	}
 }
 
 func (gb *GaltonBoard) BuildObstacles() {
@@ -62,14 +91,21 @@ func (gb *GaltonBoard) BuildObstacles() {
 	} else if gb.newConfig != nil {
 		autoCreation := gb.newConfig.CreateObstacles.Creation.Enabled
 		if autoCreation {
-
+			pegsPoints := buildObstaclesCruz(*gb)
+			for _, peg := range *pegsPoints {
+				gb.engine.AddObstacle(peg)
+			}
 		} else {
-			// Manual creation
+			pegsPoints := gb.newConfig.CreateObstacles.Positions
+			for _, peg := range pegsPoints {
+				sphere := models.NewSphere(peg.Position.X, peg.Position.Y, peg.Radius, peg.Mass, peg.Damping, models.STATIC)
+				gb.engine.AddObstacle(sphere)
+			}
 		}
 	}
 }
 
-func (gb *GaltonBoard) buildObstaclesCruz() *[]models.Sphere {
+func buildObstaclesCruz(gb GaltonBoard) *[]models.Sphere {
 	pegsPoints := make([]models.Sphere, 0)
 
 	minSize := gb.newConfig.CreateObstacles.Creation.Radius.Min
@@ -84,8 +120,8 @@ func (gb *GaltonBoard) buildObstaclesCruz() *[]models.Sphere {
 	mass := gb.newConfig.CreateObstacles.Creation.Mass
 	damping := gb.newConfig.CreateObstacles.Creation.Damping
 
-	xOffset := bounds.X() / float64(cols+1)
-	yOffset := (bounds.Y() - yGlobalOffset) / float64(rows+1)
+	xOffset := bounds.X / float64(cols+1)
+	yOffset := (bounds.Y - yGlobalOffset) / float64(rows+1)
 
 	for i := 0; i < rows; i++ {
 		if direction == 0 {
@@ -102,7 +138,7 @@ func (gb *GaltonBoard) buildObstaclesCruz() *[]models.Sphere {
 				y := yOffset*float64(i+1) + yGlobalOffset
 
 				sphere := models.NewSphere(x, y, radius, mass, damping, models.STATIC)
-				pegsPoints = append(pegsPoints, *sphere)
+				pegsPoints = append(pegsPoints, sphere)
 			} else {
 				if j >= cols-1 {
 					continue
@@ -111,11 +147,44 @@ func (gb *GaltonBoard) buildObstaclesCruz() *[]models.Sphere {
 					y := yOffset*float64(i+1) + yGlobalOffset
 
 					sphere := models.NewSphere(x, y, radius, mass, damping, models.STATIC)
-					pegsPoints = append(pegsPoints, *sphere)
+					pegsPoints = append(pegsPoints, sphere)
 				}
 			}
 		}
 	}
 
 	return &pegsPoints
+}
+
+func buildSpheres(gb GaltonBoard) *[]models.Sphere {
+	ballsPoints := make([]models.Sphere, 0)
+
+	canCollide := gb.newConfig.CreateBalls.Collisions
+	mass := gb.newConfig.CreateBalls.Creation.Mass
+	damping := gb.newConfig.CreateBalls.Creation.Damping
+
+	rRange := gb.newConfig.CreateBalls.Creation.Radius
+	xRange := gb.newConfig.CreateBalls.Creation.Position.X
+	vxRange := gb.newConfig.CreateBalls.Creation.Velocity.X
+	vyRange := gb.newConfig.CreateBalls.Creation.Velocity.Y
+
+	nSpheres := gb.newConfig.CreateBalls.Creation.Count
+	bounds := gb.engine.Bounds
+
+	for i := 0; i < nSpheres; i++ {
+		radius := rRange.Min + rand.Float64()*(rRange.Max-rRange.Min)
+		x := xRange.Min + rand.Float64()*(xRange.Max-xRange.Min)
+		y := bounds.Y - 2*radius
+
+		vx := vxRange.Min + rand.Float64()*(vxRange.Max-vxRange.Min)
+		vy := vyRange.Min + rand.Float64()*(vyRange.Max-vyRange.Min)
+
+		sphere := models.NewSphere(x, y, radius, mass, damping, models.DYNAMIC)
+		sphere.CanCollide = canCollide
+		sphere.Velocity = gmath.NewVector(vx, vy)
+
+		ballsPoints = append(ballsPoints, sphere)
+	}
+
+	return &ballsPoints
 }

@@ -5,11 +5,11 @@ import "go-board/gmath"
 type Mesh struct {
 	columns int
 	rows    int
-	cells   []*Cell
+	cells   []Cell
 }
 
 func NewMesh(columns, rows int) *Mesh {
-	cells := make([]*Cell, columns*rows)
+	cells := make([]Cell, columns*rows)
 
 	for i := range cells {
 		cells[i] = NewCell()
@@ -28,10 +28,10 @@ func (m *Mesh) AddObject(position gmath.Vector, id int) {
 }
 
 func (m *Mesh) getCell(position gmath.Vector) *Cell {
-	x := int(position.X())
-	y := int(position.Y())
+	x := int(position.X)
+	y := int(position.Y)
 
-	return m.cells[y*m.columns+x]
+	return &m.cells[y*m.columns+x]
 }
 
 func (m *Mesh) GetObjects(position gmath.Vector) []*int {

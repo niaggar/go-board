@@ -26,7 +26,6 @@ type board struct {
 	TimeStep     float64
 	SubSteps     int
 	MaxTime      struct {
-		Enabled     bool
 		MaxTime     float64
 		TouchGround bool
 	}
@@ -41,8 +40,13 @@ type NewConfig struct {
 			Enabled  bool
 			Count    int
 			Damping  float64
+			Mass     float64
 			Radius   minMax
 			Position struct {
+				X minMax
+				Y minMax
+			}
+			Velocity struct {
 				X minMax
 				Y minMax
 			}

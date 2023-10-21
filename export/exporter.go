@@ -43,8 +43,8 @@ func (e *Exporter) ExportElement(sphere models.Sphere) {
 	content := fmt.Sprintf("%d \t %d \t %f \t %f \t %f \n",
 		e.countElements,
 		sphere.Type,
-		sphere.Position.X(),
-		sphere.Position.Y(),
+		sphere.Position.X,
+		sphere.Position.Y,
 		sphere.Radius,
 	)
 

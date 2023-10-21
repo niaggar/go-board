@@ -1,33 +1,67 @@
 {
   "Board": {
-    "gridSize": 10,
-    "rowNumber": 6,
-    "columnNumber": 7,
-    "damping": 0.5,
-    "stop": {
-      "maxTime": 100.0,
-      "touchGround": true
+    "ExportRoute": "./data/justTest.dat",
+    "GridSize": 10.0,
+    "RowNumber": 5,
+    "ColumnNumber": 5,
+    "Damping": 0.4,
+    "Gravity": {
+      "X": 0.0,
+      "Y": -9.8
+    },
+    "TimeStep": 0.01,
+    "SubSteps": 8,
+    "MaxTime": {
+      "MaxTime": 10.0,
+      "TouchGround": true
     }
   },
-  "Ball": {
-    "count": 5,
-    "radius": 1.0,
-    "damping": 0.2,
-    "collisions": true,
+  "CreateBalls": {
+    "Collisions": false,
+    "Positions": [],
+    "Creation": {
+      "Enabled": true,
+      "Count": 5,
+      "Damping": 0.8,
+      "Mass": 1.0,
+      "Radius": {
+        "Min": 1,
+        "Max": 1
+      },
+      "Position": {
+        "X": {
+          "Min": 5.0,
+          "Max": 10.0
+        },
+        "Y": {
+          "Min": 0.0,
+          "Max": 5.0
+        }
+      },
+      "Velocity": {
+        "X": {
+          "Min": -1.0,
+          "Max": 1.0
+        },
+        "Y": {
+          "Min": -1.0,
+          "Max": 1.0
+        }
+      }
+    }
   },
-  "Gravity": {
-    "enabled": true,
-    "x": 0.0,
-    "y": -9.8
-  },
-  "Obstacles": {
-    "radius": 0.5,
-    "damping": 0.1,
-    "collisions": true,
-    "positions": [
-      {"x": 1.0, "y": 1.0},
-      {"x": 2.0, "y": 2.0},
-      {"x": 3.0, "y": 3.0}
-    ]
+  "CreateObstacles": {
+    "Positions": [],
+    "Creation": {
+      "Enabled": true,
+      "Damping": 0.4,
+      "Mass": 3.0,
+      "Radius": {
+        "Min": 2,
+        "Max": 2
+      },
+      "Direction": 1,
+      "YOffset": 0
+    }
   }
 }
