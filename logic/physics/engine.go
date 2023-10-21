@@ -43,27 +43,31 @@ func (e *Engine) AddObstacle(s models.Sphere) {
 
 func (e *Engine) Update() {
 	for i := 0; i < e.SubSteps; i++ {
-		for _, s := range e.Objects {
-			s.ApplyForce(&e.Gravity)
-			s.Update(e.Dt)
-			CollisionBounds(s, e.Bounds)
+		e.updateBodies()
+		e.validateCollisions()
+	}
+}
+
+func (e *Engine) updateBodies() {
+	for i := 0; i < len(e.Objects); i++ {
+		e.Objects[i].ApplyForce(&e.Gravity)
+		e.Objects[i].Update(e.Dt)
+		CollisionBounds(e.Objects[i], e.Bounds)
+	}
+}
+
+func (e *Engine) validateCollisions() {
+	for i := 0; i < len(e.Objects); i++ {
+		for j := i + 1; j < len(e.Objects); j++ {
+			ValidateCollision(e.Objects[i], e.Objects[j])
 		}
-
-		for _, sA := range e.Objects {
-			/*for _, sB := range e.Objects {
-				if sA != sB {
-					ValidateCollision(&sA, &sB)
-				}
-			}*/
-
-			for _, sB := range e.Obstacles {
-				ValidateCollision(sA, sB)
-			}
+		for _, o := range e.Obstacles {
+			ValidateCollision(e.Objects[i], o)
 		}
 	}
 }
 
-func (e *Engine) Export() {
+func (e *Engine) ExportCurrentState() {
 	total := len(e.Objects) + len(e.Obstacles)
 	e.Exporter.StartFrame(total)
 

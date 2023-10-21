@@ -30,15 +30,15 @@ func NewSphere(x, y, radius, mass, damping float64, t int) Sphere {
 }
 
 func (s *Sphere) Update(dt float64) {
-	newVelocity := gmath.Scale(&s.Force, s.InverseMass*dt)
-	s.Velocity = *gmath.Add(&s.Velocity, newVelocity)
+	newVelocity := gmath.Scale(s.Force, s.InverseMass*dt)
+	s.Velocity = gmath.Add(s.Velocity, newVelocity)
 
-	newPosition := gmath.Scale(&s.Velocity, dt)
-	s.Position = *gmath.Add(&s.Position, newPosition)
+	newPosition := gmath.Scale(s.Velocity, dt)
+	s.Position = gmath.Add(s.Position, newPosition)
 
 	s.Force = gmath.NewVector(0, 0)
 }
 
 func (s *Sphere) ApplyForce(f *gmath.Vector) {
-	s.Force = *gmath.Add(&s.Force, f)
+	s.Force = gmath.Add(s.Force, *f)
 }

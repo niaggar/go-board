@@ -17,6 +17,7 @@ type GaltonBoard struct {
 	maxTime       float64
 	currentTime   float64
 	timeStep      float64
+	borders       []models.Sphere
 }
 
 func NewGaltonBoard(route string) *GaltonBoard {
@@ -29,14 +30,13 @@ func NewGaltonBoard(route string) *GaltonBoard {
 	bounds := gmath.NewVector(xSize, ySize)
 	gravity := configuration.Board.Gravity
 	damping := configuration.Board.Damping
-	exportRoute := configuration.Board.ExportRoute
 
 	maxTime := configuration.Board.MaxTime.MaxTime
 	currentTime := 0.0
 	timeStep := configuration.Board.TimeStep
 	subSteps := configuration.Board.SubSteps
 
-	exporter := export.NewExporter(exportRoute)
+	exporter := export.NewExporter(configuration.Board.ExportPathName, configuration.Board.ExportHistogramName)
 	engine := physics.NewEngine(gravity, bounds, damping, timeStep, subSteps, exporter)
 
 	return &GaltonBoard{
@@ -51,17 +51,17 @@ func NewGaltonBoard(route string) *GaltonBoard {
 }
 
 func (gb *GaltonBoard) Run() {
-	gb.exporter.CreateFile()
+	gb.exporter.CreatePathFile()
 
 	for gb.currentTime < gb.maxTime {
 		gb.engine.Update()
-		gb.engine.Export()
+		gb.engine.ExportCurrentState()
 
 		gb.currentTime += gb.timeStep
-		// gb.exporter.Export(gb.engine.Objects, gb.currentTime)
+		// gb.exporter.ExportCurrentState(gb.engine.Objects, gb.currentTime)
 	}
 
-	gb.exporter.CloseFile()
+	gb.exporter.ClosePathFile()
 }
 
 func (gb *GaltonBoard) BuildSpheres() {
@@ -70,7 +70,7 @@ func (gb *GaltonBoard) BuildSpheres() {
 	} else if gb.newConfig != nil {
 		autoCreation := gb.newConfig.CreateBalls.Creation.Enabled
 		if autoCreation {
-			ballsPoints := buildSpheres(*gb)
+			ballsPoints := gb.buildSpheres()
 			for _, ball := range *ballsPoints {
 				gb.engine.AddSphere(ball)
 			}
@@ -91,7 +91,7 @@ func (gb *GaltonBoard) BuildObstacles() {
 	} else if gb.newConfig != nil {
 		autoCreation := gb.newConfig.CreateObstacles.Creation.Enabled
 		if autoCreation {
-			pegsPoints := buildObstaclesCruz(*gb)
+			pegsPoints := gb.buildObstaclesCruz()
 			for _, peg := range *pegsPoints {
 				gb.engine.AddObstacle(peg)
 			}
@@ -105,7 +105,7 @@ func (gb *GaltonBoard) BuildObstacles() {
 	}
 }
 
-func buildObstaclesCruz(gb GaltonBoard) *[]models.Sphere {
+func (gb *GaltonBoard) buildObstaclesCruz() *[]models.Sphere {
 	pegsPoints := make([]models.Sphere, 0)
 
 	minSize := gb.newConfig.CreateObstacles.Creation.Radius.Min
@@ -156,7 +156,7 @@ func buildObstaclesCruz(gb GaltonBoard) *[]models.Sphere {
 	return &pegsPoints
 }
 
-func buildSpheres(gb GaltonBoard) *[]models.Sphere {
+func (gb *GaltonBoard) buildSpheres() *[]models.Sphere {
 	ballsPoints := make([]models.Sphere, 0)
 
 	canCollide := gb.newConfig.CreateBalls.Collisions
@@ -187,4 +187,8 @@ func buildSpheres(gb GaltonBoard) *[]models.Sphere {
 	}
 
 	return &ballsPoints
+}
+
+func (gb *GaltonBoard) buildBorders() {
+
 }

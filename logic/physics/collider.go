@@ -31,47 +31,56 @@ func ValidateCollision(sA, sB *models.Sphere) {
 
 	rmin := sA.Radius + sB.Radius
 	rminSqu := rmin * rmin
-	direction := gmath.Sub(&sA.Position, &sB.Position)
+	direction := gmath.Sub(sA.Position, sB.Position)
 	distanceSqu := gmath.LengthSqu(direction)
 
 	if distanceSqu < rminSqu {
 		norm := gmath.Normalice(direction)
-		overlap := math.Abs(rmin - math.Sqrt(distanceSqu))
+		overlap := math.Sqrt(distanceSqu) - rmin
 
-		separateSphere(sA, sB, *norm, overlap)
-		resolveCollision(sA, sB, *norm, overlap)
+		separateSphere(sA, sB, norm, overlap)
+		resolveCollision(sA, sB, norm, overlap)
 	}
 }
 
 func separateSphere(sA, sB *models.Sphere, norm gmath.Vector, overlap float64) {
 	if sA.Type == models.STATIC {
-		sB.Position = *gmath.Sub(&sA.Position, gmath.Scale(&norm, overlap))
+		sB.Position = gmath.Add(sB.Position, gmath.Scale(norm, overlap))
 	} else if sB.Type == models.STATIC {
-		sA.Position = *gmath.Add(&sB.Position, gmath.Scale(&norm, overlap))
+		sA.Position = gmath.Sub(sA.Position, gmath.Scale(norm, overlap))
 	} else {
-		sA.Position = *gmath.Add(&sA.Position, gmath.Scale(&norm, overlap/2))
-		sB.Position = *gmath.Sub(&sB.Position, gmath.Scale(&norm, overlap/2))
+		sA.Position = gmath.Sub(sA.Position, gmath.Scale(norm, overlap/2))
+		sB.Position = gmath.Add(sB.Position, gmath.Scale(norm, overlap/2))
 	}
 }
 
 func resolveCollision(sA, sB *models.Sphere, norm gmath.Vector, overlap float64) {
-	dx := sA.Position.X - sB.Position.X
-	dy := sA.Position.Y - sB.Position.Y
-	impact_angle := math.Atan(dy / dx)
+	tangent := gmath.Vector{X: -norm.Y, Y: norm.X}
+	totalMass := sA.Mass + sB.Mass
 
-	vxa := sA.Velocity.X
-	vya := sA.Velocity.Y
-	aplha_0 := sB.Damping
+	// Project velocities onto the collision normal and tangent
+	vAn := gmath.Dot(norm, sA.Velocity)
+	vAt := gmath.Dot(tangent, sA.Velocity)
+	vBn := gmath.Dot(norm, sB.Velocity)
+	vBt := gmath.Dot(tangent, sB.Velocity)
 
-	v_tangen := -vxa*math.Sin(impact_angle) + vya*math.Cos(impact_angle)
-	v_radial := -aplha_0 * (vxa*math.Cos(impact_angle) + vya*math.Sin(impact_angle))
+	// Calculate the new normal velocities
+	vAnNew := (vAn*(sA.Mass-sB.Mass) + 2*sB.Mass*vBn) / totalMass
+	vBnNew := (vBn*(sB.Mass-sA.Mass) + 2*sA.Mass*vAn) / totalMass
 
-	vx_new := v_radial*math.Cos(impact_angle) - v_tangen*math.Sin(impact_angle)
-	vy_new := v_radial*math.Sin(impact_angle) + v_tangen*math.Cos(impact_angle)
+	// Calculate the new tangent velocities
+	vAtNew := vAt
+	vBtNew := vBt
 
-	new_x := (sum_radius)*math.cos(impact_angle) + position_o.x
-	new_y := (sum_radius)*math.sin(impact_angle) + position_o.y
+	// Calculate the new normal and tangent vectors
+	damping := math.Min(sA.Damping, sB.Damping)
 
-	esphere1.set_position(Vect2(new_x, new_y))
-	esphere1.set_velocity(Vect2(vx_new, vy_new))
+	vAnNewNorm := gmath.Scale(norm, vAnNew*damping)
+	vAnNewTang := gmath.Scale(tangent, vAtNew)
+	vBnNewNorm := gmath.Scale(norm, vBnNew*damping)
+	vBnNewTang := gmath.Scale(tangent, vBtNew)
+
+	// Calculate the new velocities
+	sA.Velocity = gmath.Add(vAnNewNorm, vAnNewTang)
+	sB.Velocity = gmath.Add(vBnNewNorm, vBnNewTang)
 }

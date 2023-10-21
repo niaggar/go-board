@@ -17,15 +17,18 @@ type minMax struct {
 }
 
 type board struct {
-	ExportRoute  string
-	GridSize     float64
-	RowNumber    int
-	ColumnNumber int
-	Damping      float64
-	Gravity      gmath.Vector
-	TimeStep     float64
-	SubSteps     int
-	MaxTime      struct {
+	ExportPath          bool
+	ExportPathName      string
+	ExportHistogram     bool
+	ExportHistogramName string
+	GridSize            float64
+	RowNumber           int
+	ColumnNumber        int
+	Damping             float64
+	Gravity             gmath.Vector
+	TimeStep            float64
+	SubSteps            int
+	MaxTime             struct {
 		MaxTime     float64
 		TouchGround bool
 	}

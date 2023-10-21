@@ -1,6 +1,9 @@
 {
   "Board": {
-    "ExportRoute": "./data/justTest.dat",
+    "ExportPath": true,
+    "ExportPathName": "./data/path.dat",
+    "ExportHistogram": true,
+    "ExportHistogramName": "./data/histogram.png",
     "GridSize": 10.0,
     "RowNumber": 5,
     "ColumnNumber": 5,
