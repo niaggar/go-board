@@ -39,7 +39,7 @@ func ValidateCollision(sA, sB *models.Sphere) {
 		overlap := float32(math.Sqrt(float64(distanceSqu)) - float64(rmin))
 
 		separateSphere(sA, sB, norm, overlap)
-		resolveCollision(sA, sB, norm, overlap)
+		resolveCollision(sA, sB, norm)
 	}
 }
 
@@ -54,7 +54,7 @@ func separateSphere(sA, sB *models.Sphere, norm gmath.Vector, overlap float32) {
 	}
 }
 
-func resolveCollision(sA, sB *models.Sphere, norm gmath.Vector, overlap float32) {
+func resolveCollision(sA, sB *models.Sphere, norm gmath.Vector) {
 	tangent := gmath.Vector{X: -norm.Y, Y: norm.X}
 	totalMass := sA.Mass + sB.Mass
 

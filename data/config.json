@@ -8,9 +8,9 @@
     "Path": "./data/histo.dat"
   },
   "Board": {
-    "GridSize": 10.0,
-    "RowNumber": 5,
-    "ColumnNumber": 5,
+    "GridSize": 5.0,
+    "RowNumber": 50,
+    "ColumnNumber": 40,
     "Damping": 0.4,
     "Gravity": {
       "X": 0.0,
@@ -28,7 +28,7 @@
     "Positions": [],
     "Creation": {
       "Enabled": true,
-      "Count": 50,
+      "Count": 500,
       "Damping": 0.8,
       "Mass": 1.0,
       "Radius": {
@@ -37,8 +37,8 @@
       },
       "Position": {
         "X": {
-          "Min": 5.0,
-          "Max": 30.0
+          "Min": 90.0,
+          "Max": 110.0
         },
         "Y": {
           "Min": 0.0,
