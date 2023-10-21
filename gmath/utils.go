@@ -11,11 +11,11 @@ func Normalice(v Vector) Vector {
 	return Scale(v, 1/length)
 }
 
-func Dot(v1, v2 Vector) float64 {
+func Dot(v1, v2 Vector) float32 {
 	return v1.X*v2.X + v1.Y*v2.Y
 }
 
-func Cross(v1, v2 Vector) float64 {
+func Cross(v1, v2 Vector) float32 {
 	return v1.X*v2.Y - v1.Y*v2.X
 }
 
@@ -27,14 +27,14 @@ func Sub(v1, v2 Vector) Vector {
 	return Vector{v1.X - v2.X, v1.Y - v2.Y}
 }
 
-func Scale(v Vector, s float64) Vector {
+func Scale(v Vector, s float32) Vector {
 	return Vector{v.X * s, v.Y * s}
 }
 
-func Length(v Vector) float64 {
-	return math.Sqrt(v.X*v.X + v.Y*v.Y)
+func Length(v Vector) float32 {
+	return float32(math.Sqrt(float64(v.X*v.X + v.Y*v.Y)))
 }
 
-func LengthSqu(v Vector) float64 {
+func LengthSqu(v Vector) float32 {
 	return v.X*v.X + v.Y*v.Y
 }

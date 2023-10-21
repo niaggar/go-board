@@ -5,10 +5,10 @@ import (
 )
 
 type Sphere struct {
-	Damping     float64
-	Radius      float64
-	Mass        float64
-	InverseMass float64
+	Damping     float32
+	Radius      float32
+	Mass        float32
+	InverseMass float32
 	Position    gmath.Vector
 	Velocity    gmath.Vector
 	Force       gmath.Vector
@@ -16,7 +16,7 @@ type Sphere struct {
 	CanCollide  bool
 }
 
-func NewSphere(x, y, radius, mass, damping float64, t int) Sphere {
+func NewSphere(x, y, radius, mass, damping float32, t int) Sphere {
 	return Sphere{
 		Damping:     damping,
 		Radius:      radius,
@@ -29,7 +29,7 @@ func NewSphere(x, y, radius, mass, damping float64, t int) Sphere {
 	}
 }
 
-func (s *Sphere) Update(dt float64) {
+func (s *Sphere) Update(dt float32) {
 	newVelocity := gmath.Scale(s.Force, s.InverseMass*dt)
 	s.Velocity = gmath.Add(s.Velocity, newVelocity)
 

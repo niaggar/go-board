@@ -1,10 +1,10 @@
 package gmath
 
 type Vector struct {
-	X float64
-	Y float64
+	X float32
+	Y float32
 }
 
-func NewVector(x, y float64) Vector {
+func NewVector(x, y float32) Vector {
 	return Vector{x, y}
 }

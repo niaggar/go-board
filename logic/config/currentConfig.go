@@ -1,7 +1,7 @@
 package config
 
 type CurrentConfig struct {
-	CurrentTime float64
+	CurrentTime float32
 	Board       board
 	Objects     []object
 }

@@ -1,9 +1,13 @@
 {
+  "ExportPath": {
+    "Enabled": true,
+    "Path": "./data/path.dat"
+  },
+  "ExportHisto": {
+    "Enabled": false,
+    "Path": "./data/histo.dat"
+  },
   "Board": {
-    "ExportPath": true,
-    "ExportPathName": "./data/path.dat",
-    "ExportHistogram": true,
-    "ExportHistogramName": "./data/histogram.png",
     "GridSize": 10.0,
     "RowNumber": 5,
     "ColumnNumber": 5,
@@ -15,7 +19,7 @@
     "TimeStep": 0.01,
     "SubSteps": 8,
     "MaxTime": {
-      "MaxTime": 10.0,
+      "MaxTime": 100.0,
       "TouchGround": true
     }
   },
@@ -24,17 +28,17 @@
     "Positions": [],
     "Creation": {
       "Enabled": true,
-      "Count": 5,
+      "Count": 50,
       "Damping": 0.8,
       "Mass": 1.0,
       "Radius": {
-        "Min": 1,
-        "Max": 1
+        "Min": 0.2,
+        "Max": 0.5
       },
       "Position": {
         "X": {
           "Min": 5.0,
-          "Max": 10.0
+          "Max": 30.0
         },
         "Y": {
           "Min": 0.0,
@@ -43,12 +47,12 @@
       },
       "Velocity": {
         "X": {
-          "Min": -1.0,
-          "Max": 1.0
+          "Min": -20.0,
+          "Max": 20.0
         },
         "Y": {
-          "Min": -1.0,
-          "Max": 1.0
+          "Min": -10.0,
+          "Max": 10.0
         }
       }
     }
@@ -60,7 +64,7 @@
       "Damping": 0.4,
       "Mass": 3.0,
       "Radius": {
-        "Min": 2,
+        "Min": 1,
         "Max": 2
       },
       "Direction": 1,

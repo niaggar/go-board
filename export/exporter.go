@@ -1,101 +1,79 @@
 package export
 
 import (
+	"bufio"
 	"fmt"
+	"go-board/gmath"
 	"go-board/models"
 	"os"
 )
 
 type Exporter struct {
-	pahtRoute      string
-	histogramRoute string
-	countElements  int
-	totalElements  int
-	pathFile       *os.File
-	histogramFile  *os.File
-	tempPathData   string
+	path   string
+	file   *os.File
+	writer *bufio.Writer
 }
 
-func NewExporter(pathRoute, histogramRoute string) *Exporter {
+func NewExporter(path string) *Exporter {
 	return &Exporter{
-		pahtRoute:      pathRoute,
-		histogramRoute: histogramRoute,
+		path: path,
 	}
 }
 
-func (e *Exporter) CreatePathFile() {
-	file, err := os.Create(e.pahtRoute)
+func (e *Exporter) CreateFile() {
+	file, err := os.Create(e.path)
+	writer := bufio.NewWriterSize(file, 128*1024)
+
 	if err != nil {
 		panic(err)
 	}
-	e.pathFile = file
+
+	e.file = file
+	e.writer = writer
 }
 
-func (e *Exporter) CreateHistogramFile() {
-	file, err := os.Create(e.histogramRoute)
-	if err != nil {
-		panic(err)
-	}
-	e.histogramFile = file
+func (e *Exporter) CloseFile() {
+	e.writer.Flush()
+	e.file.Close()
 }
 
-func (e *Exporter) ClosePathFile() {
-	err := e.pathFile.Close()
-	if err != nil {
-		panic(err)
-	}
-}
+func (e *Exporter) Write(content string) {
+	_, err := e.writer.WriteString(content)
 
-func (e *Exporter) CloseHistogramFile() {
-	err := e.histogramFile.Close()
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (e *Exporter) ExportHistogram() {
-	err := e.histogramFile.Sync()
-	if err != nil {
-		return
-	}
-
-	content := fmt.Sprintf("%d \n", e.countElements)
-	_, err = e.histogramFile.WriteString(content)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (e *Exporter) ExportElement(sphere models.Sphere) {
-	err := e.pathFile.Sync()
-	if err != nil {
-		return
-	}
-
+func GetExportPath(number int, sphere *models.Sphere) string {
 	content := fmt.Sprintf("%d \t %d \t %f \t %f \t %f \n",
-		e.countElements,
+		number,
 		sphere.Type,
 		sphere.Position.X,
 		sphere.Position.Y,
 		sphere.Radius,
 	)
 
-	_, err = e.pathFile.WriteString(content)
-	if err != nil {
-		panic(err)
-	}
-
-	e.countElements++
+	return content
 }
 
-func (e *Exporter) StartFrame(total int) {
-	e.totalElements = total
+func GetExportPathBorders(number int, point *gmath.Vector) string {
+	content := fmt.Sprintf("%d \t %d \t %f \t %f \t %f \n",
+		number,
+		2,
+		point.X,
+		point.Y,
+		0.5,
+	)
 
-	content := fmt.Sprintf("%d\naver\n", e.totalElements)
-	_, err := e.pathFile.WriteString(content)
-	if err != nil {
-		panic(err)
-	}
+	return content
+}
 
-	e.countElements = 0
+func GetExportHeader(total int) string {
+	content := fmt.Sprintf("%d\naver\n", total)
+	return content
+}
+
+func GetExportHistogram(counts []*int) string {
+	return ""
 }

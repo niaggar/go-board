@@ -10,16 +10,17 @@ type Engine struct {
 	Gravity   gmath.Vector
 	Objects   []*models.Sphere
 	Obstacles []*models.Sphere
-	Damping   float64
-	TimeStep  float64
+	Damping   float32
+	TimeStep  float32
 	SubSteps  int
-	Dt        float64
+	Dt        float32
 	Bounds    gmath.Vector
-	Exporter  *export.Exporter
+	PathExp   *export.Exporter
+	HisExp    *export.Exporter
 	Mesh      models.Mesh
 }
 
-func NewEngine(gravity, bounds gmath.Vector, damping, timeStep float64, subSteps int, exporter *export.Exporter) Engine {
+func NewEngine(gravity, bounds gmath.Vector, damping, timeStep float32, subSteps int, pathExp, hisExp *export.Exporter) Engine {
 	return Engine{
 		Gravity:   gravity,
 		Objects:   make([]*models.Sphere, 0),
@@ -27,9 +28,10 @@ func NewEngine(gravity, bounds gmath.Vector, damping, timeStep float64, subSteps
 		Damping:   damping,
 		TimeStep:  timeStep,
 		SubSteps:  subSteps,
-		Dt:        timeStep / float64(subSteps),
+		Dt:        timeStep / float32(subSteps),
 		Bounds:    bounds,
-		Exporter:  exporter,
+		PathExp:   pathExp,
+		HisExp:    hisExp,
 	}
 }
 
@@ -67,14 +69,26 @@ func (e *Engine) validateCollisions() {
 	}
 }
 
-func (e *Engine) ExportCurrentState() {
-	total := len(e.Objects) + len(e.Obstacles)
-	e.Exporter.StartFrame(total)
+func (e *Engine) ExportCurrentState(borders []*gmath.Vector) {
+	total := len(e.Objects) + len(e.Obstacles) + len(borders)
 
-	for _, s := range e.Objects {
-		e.Exporter.ExportElement(*s)
+	content := export.GetExportHeader(total)
+	e.PathExp.Write(content)
+
+	itemCount := 0
+	for itemCount < len(e.Objects) {
+		content = export.GetExportPath(itemCount, e.Objects[itemCount])
+		e.PathExp.Write(content)
+		itemCount++
 	}
-	for _, s := range e.Obstacles {
-		e.Exporter.ExportElement(*s)
+	for j := 0; j < len(e.Obstacles); j++ {
+		content = export.GetExportPath(itemCount, e.Obstacles[j])
+		e.PathExp.Write(content)
+		itemCount++
+	}
+	for j := 0; j < len(borders); j++ {
+		content = export.GetExportPathBorders(itemCount, borders[j])
+		e.PathExp.Write(content)
+		itemCount++
 	}
 }

@@ -36,14 +36,14 @@ func ValidateCollision(sA, sB *models.Sphere) {
 
 	if distanceSqu < rminSqu {
 		norm := gmath.Normalice(direction)
-		overlap := math.Sqrt(distanceSqu) - rmin
+		overlap := float32(math.Sqrt(float64(distanceSqu)) - float64(rmin))
 
 		separateSphere(sA, sB, norm, overlap)
 		resolveCollision(sA, sB, norm, overlap)
 	}
 }
 
-func separateSphere(sA, sB *models.Sphere, norm gmath.Vector, overlap float64) {
+func separateSphere(sA, sB *models.Sphere, norm gmath.Vector, overlap float32) {
 	if sA.Type == models.STATIC {
 		sB.Position = gmath.Add(sB.Position, gmath.Scale(norm, overlap))
 	} else if sB.Type == models.STATIC {
@@ -54,7 +54,7 @@ func separateSphere(sA, sB *models.Sphere, norm gmath.Vector, overlap float64) {
 	}
 }
 
-func resolveCollision(sA, sB *models.Sphere, norm gmath.Vector, overlap float64) {
+func resolveCollision(sA, sB *models.Sphere, norm gmath.Vector, overlap float32) {
 	tangent := gmath.Vector{X: -norm.Y, Y: norm.X}
 	totalMass := sA.Mass + sB.Mass
 
@@ -73,7 +73,7 @@ func resolveCollision(sA, sB *models.Sphere, norm gmath.Vector, overlap float64)
 	vBtNew := vBt
 
 	// Calculate the new normal and tangent vectors
-	damping := math.Min(sA.Damping, sB.Damping)
+	damping := float32(math.Min(float64(sA.Damping), float64(sB.Damping)))
 
 	vAnNewNorm := gmath.Scale(norm, vAnNew*damping)
 	vAnNewTang := gmath.Scale(tangent, vAtNew)
