@@ -1,0 +1,33 @@
+{
+  "Board": {
+    "gridSize": 10,
+    "rowNumber": 6,
+    "columnNumber": 7,
+    "damping": 0.5,
+    "stop": {
+      "maxTime": 100.0,
+      "touchGround": true
+    }
+  },
+  "Ball": {
+    "count": 5,
+    "radius": 1.0,
+    "damping": 0.2,
+    "collisions": true,
+  },
+  "Gravity": {
+    "enabled": true,
+    "x": 0.0,
+    "y": -9.8
+  },
+  "Obstacles": {
+    "radius": 0.5,
+    "damping": 0.1,
+    "collisions": true,
+    "positions": [
+      {"x": 1.0, "y": 1.0},
+      {"x": 2.0, "y": 2.0},
+      {"x": 3.0, "y": 3.0}
+    ]
+  }
+}

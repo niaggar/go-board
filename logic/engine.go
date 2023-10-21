@@ -7,43 +7,44 @@ import (
 )
 
 type Engine struct {
-	gravity  gmath.Vector
-	objects  []*models.Sphere
-	damping  float64
-	timeStep float64
-	subSteps int
-	dt       float64
-	bounds   gmath.Vector
-	exporter *export.Exporter
+	Gravity  gmath.Vector
+	Objects  []*models.Sphere
+	Damping  float64
+	TimeStep float64
+	SubSteps int
+	Dt       float64
+	Bounds   gmath.Vector
+	Exporter *export.Exporter
+	Mesh     models.Mesh
 }
 
-func NewEngine(gravity, bounds gmath.Vector, damping, timeStep float64, subSteps int) *Engine {
+func NewEngine(gravity, bounds gmath.Vector, damping, timeStep float64, subSteps int, exporter *export.Exporter) *Engine {
 	return &Engine{
-		gravity:  gravity,
-		objects:  make([]*models.Sphere, 0),
-		damping:  damping,
-		timeStep: timeStep,
-		subSteps: subSteps,
-		dt:       timeStep / float64(subSteps),
-		bounds:   bounds,
-		exporter: export.NewExporter("./export.dat"),
+		Gravity:  gravity,
+		Objects:  make([]*models.Sphere, 0),
+		Damping:  damping,
+		TimeStep: timeStep,
+		SubSteps: subSteps,
+		Dt:       timeStep / float64(subSteps),
+		Bounds:   bounds,
+		Exporter: exporter,
 	}
 }
 
 func (e *Engine) AddSphere(s *models.Sphere) {
-	e.objects = append(e.objects, s)
+	e.Objects = append(e.Objects, s)
 }
 
 func (e *Engine) Update() {
-	for i := 0; i < e.subSteps; i++ {
-		for _, s := range e.objects {
-			s.ApplyForce(&e.gravity)
-			s.Update(e.dt)
-			s.CollisionBounds(e.bounds)
+	for i := 0; i < e.SubSteps; i++ {
+		for _, s := range e.Objects {
+			s.ApplyForce(&e.Gravity)
+			s.Update(e.Dt)
+			s.CollisionBounds(e.Bounds)
 		}
 
-		for _, sA := range e.objects {
-			for _, sB := range e.objects {
+		for _, sA := range e.Objects {
+			for _, sB := range e.Objects {
 				if sA != sB {
 					sA.ValidateCollision(sB)
 				}
@@ -53,18 +54,10 @@ func (e *Engine) Update() {
 }
 
 func (e *Engine) Export() {
-	total := len(e.objects)
-	e.exporter.StartFrame(total)
+	total := len(e.Objects)
+	e.Exporter.StartFrame(total)
 
-	for _, s := range e.objects {
-		e.exporter.ExportElement(*s)
+	for _, s := range e.Objects {
+		e.Exporter.ExportElement(*s)
 	}
-}
-
-func (e *Engine) CreateFile() {
-	e.exporter.CreateFile()
-}
-
-func (e *Engine) CloseFile() {
-	e.exporter.CloseFile()
 }
