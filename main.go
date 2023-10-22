@@ -13,6 +13,7 @@ func main() {
 	gb.BuildObstacles()
 	gb.BuildSpheres()
 	gb.BuildBorders()
+	gb.BuildMesh()
 
 	gb.Run()
 

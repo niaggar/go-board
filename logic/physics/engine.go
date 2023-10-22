@@ -17,7 +17,8 @@ type Engine struct {
 	Bounds    gmath.Vector
 	PathExp   *export.Exporter
 	HisExp    *export.Exporter
-	Mesh      models.Mesh
+	Mesh      *models.Mesh
+	MaxSize   float32
 }
 
 func NewEngine(gravity, bounds gmath.Vector, damping, timeStep float32, subSteps int, pathExp, hisExp *export.Exporter) Engine {
@@ -50,6 +51,20 @@ func (e *Engine) Update() {
 	}
 }
 
+func (e *Engine) CreateMesh() {
+	e.Mesh = models.NewMesh(e.Bounds, e.MaxSize)
+}
+
+func (e *Engine) UpdateMesh() {
+	for i := 0; i < len(e.Objects); i++ {
+		e.Mesh.AddObject(e.Objects[i].Position, i)
+	}
+
+	for i := 0; i < len(e.Obstacles); i++ {
+		e.Mesh.AddObstacle(e.Obstacles[i].Position, i)
+	}
+}
+
 func (e *Engine) updateBodies() {
 	for i := 0; i < len(e.Objects); i++ {
 		e.Objects[i].ApplyForce(&e.Gravity)
@@ -59,14 +74,30 @@ func (e *Engine) updateBodies() {
 }
 
 func (e *Engine) validateCollisions() {
-	for i := 0; i < len(e.Objects); i++ {
-		for j := i + 1; j < len(e.Objects); j++ {
-			ValidateCollision(e.Objects[i], e.Objects[j])
-		}
-		for _, o := range e.Obstacles {
-			ValidateCollision(e.Objects[i], o)
+	e.UpdateMesh()
+
+	for i := 1; i < e.Mesh.Columns-1; i++ {
+		for j := 1; j < e.Mesh.Rows-1; j++ {
+			objects, obstacles := e.Mesh.GetElementsAround(i, j)
+
+			for k := 0; k < len(objects); k++ {
+				for l := 0; l < len(obstacles); l++ {
+					ValidateCollision(e.Objects[*objects[k]], e.Obstacles[*obstacles[l]])
+				}
+
+				for m := 0; m < len(objects); m++ {
+					sA := e.Objects[*objects[k]]
+					sB := e.Objects[*objects[m]]
+
+					if sA.Id != sB.Id {
+						ValidateCollision(sA, sB)
+					}
+				}
+			}
 		}
 	}
+
+	e.Mesh.Clear()
 }
 
 func (e *Engine) ExportCurrentState(borders []*gmath.Vector) {

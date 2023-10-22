@@ -22,7 +22,7 @@ func NewExporter(path string) *Exporter {
 
 func (e *Exporter) CreateFile() {
 	file, err := os.Create(e.path)
-	writer := bufio.NewWriterSize(file, 128*1024)
+	writer := bufio.NewWriterSize(file, 128*1024*4)
 
 	if err != nil {
 		panic(err)

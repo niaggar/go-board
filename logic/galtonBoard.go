@@ -6,6 +6,7 @@ import (
 	"go-board/logic/config"
 	"go-board/logic/physics"
 	"go-board/models"
+	"math"
 	"math/rand"
 )
 
@@ -75,11 +76,24 @@ func (gb *GaltonBoard) Run() {
 
 	for gb.currentTime < gb.maxTime {
 		gb.engine.Update()
-		gb.engine.ExportCurrentState(gb.borders)
+
+		if gb.pathExporter != nil {
+			gb.engine.ExportCurrentState(gb.borders)
+		}
 
 		gb.currentTime += gb.timeStep
 		// gb.pathExporter.ExportCurrentState(gb.engine.Objects, gb.currentTime)
 	}
+}
+
+func (gb *GaltonBoard) BuildMesh() {
+	rObsMax := gb.config.CreateObstacles.Creation.Radius.Max
+	rBallMax := gb.config.CreateBalls.Creation.Radius.Max
+
+	globalMax := math.Max(float64(rObsMax), float64(rBallMax))
+
+	gb.engine.MaxSize = float32(globalMax) * 2
+	gb.engine.CreateMesh()
 }
 
 func (gb *GaltonBoard) BuildSpheres() {
@@ -94,7 +108,7 @@ func (gb *GaltonBoard) BuildSpheres() {
 		for _, ball := range ballsPoints {
 			sphere := models.NewSphere(ball.Position.X, ball.Position.Y, ball.Radius, ball.Mass, ball.Damping, models.DYNAMIC)
 			sphere.CanCollide = ball.Collision
-			gb.engine.AddSphere(sphere)
+			gb.engine.AddSphere(*sphere)
 		}
 	}
 }
@@ -110,7 +124,7 @@ func (gb *GaltonBoard) BuildObstacles() {
 		pegsPoints := gb.config.CreateObstacles.Positions
 		for _, peg := range pegsPoints {
 			sphere := models.NewSphere(peg.Position.X, peg.Position.Y, peg.Radius, peg.Mass, peg.Damping, models.STATIC)
-			gb.engine.AddObstacle(sphere)
+			gb.engine.AddObstacle(*sphere)
 		}
 	}
 }
@@ -170,7 +184,7 @@ func (gb *GaltonBoard) buildObstaclesCruz() *[]models.Sphere {
 				y := yOffset*float32(i+1) + yGlobalOffset
 
 				sphere := models.NewSphere(x, y, radius, mass, damping, models.STATIC)
-				pegsPoints = append(pegsPoints, sphere)
+				pegsPoints = append(pegsPoints, *sphere)
 			} else {
 				if j >= cols-1 {
 					continue
@@ -179,7 +193,7 @@ func (gb *GaltonBoard) buildObstaclesCruz() *[]models.Sphere {
 					y := yOffset*float32(i+1) + yGlobalOffset
 
 					sphere := models.NewSphere(x, y, radius, mass, damping, models.STATIC)
-					pegsPoints = append(pegsPoints, sphere)
+					pegsPoints = append(pegsPoints, *sphere)
 				}
 			}
 		}
@@ -215,7 +229,7 @@ func (gb *GaltonBoard) buildSpheres() *[]models.Sphere {
 		sphere.CanCollide = canCollide
 		sphere.Velocity = gmath.NewVector(vx, vy)
 
-		ballsPoints = append(ballsPoints, sphere)
+		ballsPoints = append(ballsPoints, *sphere)
 	}
 
 	return &ballsPoints

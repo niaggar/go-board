@@ -1,6 +1,6 @@
 {
   "ExportPath": {
-    "Enabled": true,
+    "Enabled": false,
     "Path": "./data/path.dat"
   },
   "ExportHisto": {

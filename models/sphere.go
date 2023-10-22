@@ -5,6 +5,7 @@ import (
 )
 
 type Sphere struct {
+	Id          int
 	Damping     float32
 	Radius      float32
 	Mass        float32
@@ -17,8 +18,9 @@ type Sphere struct {
 	IsActive    bool
 }
 
-func NewSphere(x, y, radius, mass, damping float32, t int) Sphere {
-	return Sphere{
+func NewSphere(x, y, radius, mass, damping float32, t int) *Sphere {
+	return &Sphere{
+		Id:          gmath.GetRandomID(),
 		Damping:     damping,
 		Radius:      radius,
 		Mass:        mass,
