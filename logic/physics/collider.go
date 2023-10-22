@@ -6,21 +6,21 @@ import (
 	"math"
 )
 
-func CollisionBounds(s *models.Sphere, bounds gmath.Vector) {
+func CollisionBounds(s *models.Sphere, bounds gmath.Vector, damping float32) {
 	if s.Position.X-s.Radius < 0 {
 		s.Position.X = s.Radius
-		s.Velocity.X = -s.Velocity.X * s.Damping
+		s.Velocity.X = -s.Velocity.X * damping
 	} else if s.Position.X+s.Radius > bounds.X {
 		s.Position.X = bounds.X - s.Radius
-		s.Velocity.X = -s.Velocity.X * s.Damping
+		s.Velocity.X = -s.Velocity.X * damping
 	}
 
 	if s.Position.Y-s.Radius < 0 {
 		s.Position.Y = s.Radius
-		s.Velocity.Y = -s.Velocity.Y * s.Damping
+		s.Velocity.Y = -s.Velocity.Y * damping
 	} else if s.Position.Y+s.Radius > bounds.Y {
 		s.Position.Y = bounds.Y - s.Radius
-		s.Velocity.Y = -s.Velocity.Y * s.Damping
+		s.Velocity.Y = -s.Velocity.Y * damping
 	}
 }
 
@@ -55,32 +55,29 @@ func separateSphere(sA, sB *models.Sphere, norm gmath.Vector, overlap float32) {
 }
 
 func resolveCollision(sA, sB *models.Sphere, norm gmath.Vector) {
-	tangent := gmath.Vector{X: -norm.Y, Y: norm.X}
-	totalMass := sA.Mass + sB.Mass
+	if sA.Type == models.STATIC && sB.Type == models.STATIC {
+		return
+	}
 
-	// Project velocities onto the collision normal and tangent
-	vAn := gmath.Dot(norm, sA.Velocity)
-	vAt := gmath.Dot(tangent, sA.Velocity)
-	vBn := gmath.Dot(norm, sB.Velocity)
-	vBt := gmath.Dot(tangent, sB.Velocity)
+	reducedMass := 1.0 / (sA.InverseMass + sB.InverseMass)
+	vA := sA.Velocity
+	vB := sB.Velocity
 
-	// Calculate the new normal velocities
-	vAnNew := (vAn*(sA.Mass-sB.Mass) + 2*sB.Mass*vBn) / totalMass
-	vBnNew := (vBn*(sB.Mass-sA.Mass) + 2*sA.Mass*vAn) / totalMass
+	relativeVelocity := gmath.Sub(vA, vB)
+	velocityAlongNormal := gmath.Dot(norm, relativeVelocity)
+	if velocityAlongNormal > 0 {
+		return
+	}
 
-	// Calculate the new tangent velocities
-	vAtNew := vAt
-	vBtNew := vBt
+	e := math.Min(float64(sA.Damping), float64(sB.Damping))
+	j := (-velocityAlongNormal * (float32(1) + float32(e))) * reducedMass
 
-	// Calculate the new normal and tangent vectors
-	damping := float32(math.Min(float64(sA.Damping), float64(sB.Damping)))
+	impulse := gmath.Scale(norm, j)
 
-	vAnNewNorm := gmath.Scale(norm, vAnNew*damping)
-	vAnNewTang := gmath.Scale(tangent, vAtNew)
-	vBnNewNorm := gmath.Scale(norm, vBnNew*damping)
-	vBnNewTang := gmath.Scale(tangent, vBtNew)
-
-	// Calculate the new velocities
-	sA.Velocity = gmath.Add(vAnNewNorm, vAnNewTang)
-	sB.Velocity = gmath.Add(vBnNewNorm, vBnNewTang)
+	if sA.Type == models.DYNAMIC {
+		sA.Velocity = gmath.Add(sA.Velocity, gmath.Scale(impulse, sA.InverseMass))
+	}
+	if sB.Type == models.DYNAMIC {
+		sB.Velocity = gmath.Sub(sB.Velocity, gmath.Scale(impulse, sB.InverseMass))
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"go-board/export"
 	"go-board/gmath"
 	"go-board/models"
+	"sync"
 )
 
 type Engine struct {
@@ -46,8 +47,8 @@ func (e *Engine) AddObstacle(s models.Sphere) {
 
 func (e *Engine) Update() {
 	for i := 0; i < e.SubSteps; i++ {
-		e.updateBodies()
-		e.validateCollisions()
+		e.updateBodiesParallel()
+		e.validateCollisionsParallel()
 	}
 }
 
@@ -65,38 +66,68 @@ func (e *Engine) UpdateMesh() {
 	}
 }
 
-func (e *Engine) updateBodies() {
+func (e *Engine) updateBodiesParallel() {
+	var wg sync.WaitGroup
+
 	for i := 0; i < len(e.Objects); i++ {
-		e.Objects[i].ApplyForce(&e.Gravity)
-		e.Objects[i].Update(e.Dt)
-		CollisionBounds(e.Objects[i], e.Bounds)
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			e.Objects[i].ApplyForce(&e.Gravity)
+			e.Objects[i].Update(e.Dt)
+			CollisionBounds(e.Objects[i], e.Bounds, e.Damping)
+		}(i)
 	}
+
+	wg.Wait()
 }
 
-func (e *Engine) validateCollisions() {
+func (e *Engine) validateCollisionsParallel() {
 	e.UpdateMesh()
 
-	for i := 1; i < e.Mesh.Columns-1; i++ {
-		for j := 1; j < e.Mesh.Rows-1; j++ {
-			objects, obstacles := e.Mesh.GetElementsAround(i, j)
+	verticalNumDivisions := 10
+	horizontalNumDivisions := 10
 
-			for k := 0; k < len(objects); k++ {
-				for l := 0; l < len(obstacles); l++ {
-					ValidateCollision(e.Objects[*objects[k]], e.Obstacles[*obstacles[l]])
-				}
+	verticalDivisionSize := e.Mesh.Rows / verticalNumDivisions
+	horizontalDivisionSize := e.Mesh.Columns / horizontalNumDivisions
 
-				for m := 0; m < len(objects); m++ {
-					sA := e.Objects[*objects[k]]
-					sB := e.Objects[*objects[m]]
+	var wg sync.WaitGroup
 
-					if sA.Id != sB.Id {
-						ValidateCollision(sA, sB)
+	for sectVertical := 0; sectVertical <= verticalNumDivisions; sectVertical++ {
+		for sectHorizontal := 0; sectHorizontal <= horizontalNumDivisions; sectHorizontal++ {
+			startX := sectHorizontal * horizontalDivisionSize
+			startY := sectVertical * verticalDivisionSize
+
+			wg.Add(1)
+			go func(startX, startY, horizontalDivisionSize, verticalDivisionSize int) {
+				defer wg.Done()
+
+				for i := startX; i < startX+horizontalDivisionSize; i++ {
+					for j := startY; j < startY+verticalDivisionSize; j++ {
+						objects, obstacles := e.Mesh.GetElementsAround(i, j)
+
+						for k := 0; k < len(objects); k++ {
+							for l := 0; l < len(obstacles); l++ {
+								ValidateCollision(e.Objects[*objects[k]], e.Obstacles[*obstacles[l]])
+							}
+
+							for m := k + 1; m < len(objects); m++ {
+								sA := e.Objects[*objects[k]]
+								sB := e.Objects[*objects[m]]
+
+								if sA != sB {
+									ValidateCollision(sA, sB)
+								}
+							}
+						}
 					}
 				}
-			}
+
+			}(startX, startY, horizontalDivisionSize, verticalDivisionSize)
 		}
 	}
 
+	wg.Wait()
 	e.Mesh.Clear()
 }
 
