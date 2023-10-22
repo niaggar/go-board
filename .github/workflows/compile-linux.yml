@@ -23,16 +23,13 @@ jobs:
 
     - name: Compile
       run: |
-        set -e
         mkdir -p build/data/configs build/data/exports
-        export GOOS=windows
-        export GOARCH=amd64
-        go build -o build/gboard.exe
+        go build -o build/gboard
         cp .config.json build/
         cp model.config.json build/data/configs/
 
     - name: Publish
       uses: actions/upload-artifact@v2
       with:
-        name: windows-executable
+        name: gboard-linux-executable
         path: build/
