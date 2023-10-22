@@ -14,16 +14,14 @@ type GaltonBoard struct {
 	engine            physics.Engine
 	pathExporter      *export.Exporter
 	histogramExporter *export.Exporter
-	config            *config.NewConfig
+	config            *config.BaseConfig
 	maxTime           float32
 	currentTime       float32
 	timeStep          float32
 	borders           []*gmath.Vector
 }
 
-func NewGaltonBoard(route string) *GaltonBoard {
-	configuration := config.GetNewConfiguration(route)
-
+func NewGaltonBoard(configuration *config.BaseConfig, exportPath, exportHistogram string) *GaltonBoard {
 	gridSize := configuration.Board.GridSize
 	xSize := gridSize * float32(configuration.Board.ColumnNumber)
 	ySize := gridSize * float32(configuration.Board.RowNumber)
@@ -46,11 +44,11 @@ func NewGaltonBoard(route string) *GaltonBoard {
 	)
 
 	if configuration.ExportPath.Enabled {
-		pathExporter = export.NewExporter(configuration.ExportPath.Path)
+		pathExporter = export.NewExporter(exportPath)
 	}
 
 	if configuration.ExportHisto.Enabled {
-		histogramExporter = export.NewExporter(configuration.ExportHisto.Path)
+		histogramExporter = export.NewExporter(exportHistogram)
 	}
 
 	engine := physics.NewEngine(gravity, bounds, damping, timeStep, columnsSize, subSteps, totalObjects, columnNumber, pathExporter, histogramExporter)
@@ -59,7 +57,7 @@ func NewGaltonBoard(route string) *GaltonBoard {
 		engine:            engine,
 		pathExporter:      pathExporter,
 		histogramExporter: histogramExporter,
-		config:            &configuration,
+		config:            configuration,
 		maxTime:           maxTime,
 		currentTime:       currentTime,
 		timeStep:          timeStep,
@@ -76,8 +74,11 @@ func (gb *GaltonBoard) Run() {
 		defer gb.histogramExporter.CloseFile()
 	}
 
+	currentFrameTime := float32(0)
 	creationTime := float32(0)
 	creationFrameDelay := gb.config.CreateBalls.Creation.FrameDelay
+	exportFrameRate := gb.config.ExportFrameRate
+	exportFrameDelay := float32(1) / float32(exportFrameRate)
 
 	for gb.currentTime < gb.maxTime {
 		if creationFrameDelay == 0 {
@@ -89,14 +90,16 @@ func (gb *GaltonBoard) Run() {
 
 		gb.engine.Update()
 
-		if gb.pathExporter != nil {
+		if gb.pathExporter != nil && currentFrameTime >= exportFrameDelay {
 			gb.engine.ExportCurrentState(gb.borders)
+			currentFrameTime = 0
 		}
 		if gb.engine.IsEnded {
 			break
 		}
 
 		gb.currentTime += gb.timeStep
+		currentFrameTime += gb.timeStep
 		creationTime++
 	}
 

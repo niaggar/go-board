@@ -79,7 +79,6 @@ func GetExportHistogram(counts []int) string {
 	for i := 1; i < len(counts); i++ {
 		content += fmt.Sprintf("%d\t%d\n", i, counts[i])
 	}
-	content += "end\n"
 
 	return content
 }

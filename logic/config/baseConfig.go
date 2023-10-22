@@ -18,7 +18,6 @@ type minMax struct {
 
 type export struct {
 	Enabled bool
-	Path    string
 }
 
 type board struct {
@@ -35,11 +34,14 @@ type board struct {
 	}
 }
 
-type NewConfig struct {
-	Board       board
-	ExportPath  export
-	ExportHisto export
-	CreateBalls struct {
+type BaseConfig struct {
+	NumExecutions   int
+	Name            string
+	ExportFrameRate int
+	Board           board
+	ExportPath      export
+	ExportHisto     export
+	CreateBalls     struct {
 		Collisions bool
 		Positions  []object
 		Creation   struct {

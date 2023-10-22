@@ -1,0 +1,5 @@
+{
+  "base": "./",
+  "config": "data/configs",
+  "export": "data/exports"
+}

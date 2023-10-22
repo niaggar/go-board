@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func GetNewConfiguration(route string) NewConfig {
+func GetNewConfiguration(route string) BaseConfig {
 	file, err := os.Open(route)
 	if err != nil {
 		fmt.Println("Error al abrir el archivo:", err)
@@ -15,7 +15,7 @@ func GetNewConfiguration(route string) NewConfig {
 
 	defer file.Close()
 
-	var config NewConfig
+	var config BaseConfig
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&config)
 	if err != nil {
@@ -26,7 +26,7 @@ func GetNewConfiguration(route string) NewConfig {
 	return config
 }
 
-func GetCurrentConfiguration(route string) CurrentConfig {
+func GetCurrentConfiguration(route string) StateConfig {
 	file, err := os.Open(route)
 	if err != nil {
 		fmt.Println("Error al abrir el archivo:", err)
@@ -35,7 +35,7 @@ func GetCurrentConfiguration(route string) CurrentConfig {
 
 	defer file.Close()
 
-	var config CurrentConfig
+	var config StateConfig
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&config)
 	if err != nil {
@@ -46,7 +46,27 @@ func GetCurrentConfiguration(route string) CurrentConfig {
 	return config
 }
 
-func SaveCurrentConfiguration(route string, config CurrentConfig) {
+func GetGlobalConfiguration() GlobalConfig {
+	file, err := os.Open("./.config.json")
+	if err != nil {
+		fmt.Println("Error al abrir el archivo:", err)
+		panic(err)
+	}
+
+	defer file.Close()
+
+	var config GlobalConfig
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&config)
+	if err != nil {
+		fmt.Println("Error al decodificar el archivo JSON:", err)
+		panic(err)
+	}
+
+	return config
+}
+
+func SaveCurrentConfiguration(route string, config StateConfig) {
 	file, err := os.Create(route)
 	if err != nil {
 		fmt.Println("Error al crear el archivo:", err)
