@@ -74,6 +74,12 @@ func GetExportHeader(total int) string {
 	return content
 }
 
-func GetExportHistogram(counts []*int) string {
-	return ""
+func GetExportHistogram(counts []int) string {
+	content := "column\tcount\n"
+	for i := 1; i < len(counts); i++ {
+		content += fmt.Sprintf("%d\t%d\n", i, counts[i])
+	}
+	content += "end\n"
+
+	return content
 }

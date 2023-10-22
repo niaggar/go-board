@@ -4,22 +4,22 @@
     "Path": "./data/path----1.dat"
   },
   "ExportHisto": {
-    "Enabled": false,
+    "Enabled": true,
     "Path": "./data/histo.dat"
   },
   "Board": {
-    "GridSize": 5.0,
-    "RowNumber": 50,
+    "GridSize": 4.0,
+    "RowNumber": 30,
     "ColumnNumber": 40,
     "Damping": 0.4,
     "Gravity": {
       "X": 0.0,
-      "Y": -9.8
+      "Y": -9.81
     },
     "TimeStep": 0.01,
-    "SubSteps": 8,
+    "SubSteps": 4,
     "MaxTime": {
-      "MaxTime": 100.0,
+      "MaxTime": 200.0,
       "TouchGround": true
     }
   },
@@ -28,30 +28,30 @@
     "Positions": [],
     "Creation": {
       "Enabled": true,
-      "Count": 500,
+      "Count": 1600,
       "Damping": 0.8,
       "Mass": 1.0,
       "Radius": {
         "Min": 0.2,
-        "Max": 0.5
+        "Max": 0.2
       },
       "Position": {
         "X": {
-          "Min": 20.0,
-          "Max": 180.0
+          "Min": 70.0,
+          "Max": 90.0
         },
         "Y": {
           "Min": 0.0,
-          "Max": 5.0
+          "Max": 1.0
         }
       },
       "Velocity": {
         "X": {
-          "Min": -60.0,
-          "Max": 60.0
+          "Min": -5.0,
+          "Max": 5.0
         },
         "Y": {
-          "Min": -10.0,
+          "Min": -5.0,
           "Max": 0.0
         }
       }
@@ -64,7 +64,7 @@
       "Damping": 0.6,
       "Mass": 3.0,
       "Radius": {
-        "Min": 0.5,
+        "Min": 1,
         "Max": 1
       },
       "Direction":0,

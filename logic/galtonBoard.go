@@ -36,6 +36,9 @@ func NewGaltonBoard(route string) *GaltonBoard {
 	currentTime := float32(0)
 	timeStep := configuration.Board.TimeStep
 	subSteps := configuration.Board.SubSteps
+	totalObjects := configuration.CreateBalls.Creation.Count
+	columnNumber := configuration.Board.ColumnNumber
+	columnsSize := configuration.Board.GridSize
 
 	var (
 		pathExporter      *export.Exporter = nil
@@ -50,7 +53,7 @@ func NewGaltonBoard(route string) *GaltonBoard {
 		histogramExporter = export.NewExporter(configuration.ExportHisto.Path)
 	}
 
-	engine := physics.NewEngine(gravity, bounds, damping, timeStep, subSteps, pathExporter, histogramExporter)
+	engine := physics.NewEngine(gravity, bounds, damping, timeStep, columnsSize, subSteps, totalObjects, columnNumber, pathExporter, histogramExporter)
 
 	return &GaltonBoard{
 		engine:            engine,
@@ -82,7 +85,13 @@ func (gb *GaltonBoard) Run() {
 		}
 
 		gb.currentTime += gb.timeStep
-		// gb.pathExporter.ExportCurrentState(gb.engine.Objects, gb.currentTime)
+		if gb.engine.IsEnded {
+			break
+		}
+	}
+
+	if gb.histogramExporter != nil {
+		gb.engine.ExportHistogram()
 	}
 }
 

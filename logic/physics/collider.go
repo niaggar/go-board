@@ -6,7 +6,7 @@ import (
 	"math"
 )
 
-func CollisionBounds(s *models.Sphere, bounds gmath.Vector, damping float32) {
+func CollisionBounds(s *models.Sphere, bounds gmath.Vector, damping float32, detectFloor bool) {
 	if s.Position.X-s.Radius < 0 {
 		s.Position.X = s.Radius
 		s.Velocity.X = -s.Velocity.X * damping
@@ -18,6 +18,10 @@ func CollisionBounds(s *models.Sphere, bounds gmath.Vector, damping float32) {
 	if s.Position.Y-s.Radius < 0 {
 		s.Position.Y = s.Radius
 		s.Velocity.Y = -s.Velocity.Y * damping
+
+		if detectFloor {
+			s.IsActive = false
+		}
 	} else if s.Position.Y+s.Radius > bounds.Y {
 		s.Position.Y = bounds.Y - s.Radius
 		s.Velocity.Y = -s.Velocity.Y * damping
