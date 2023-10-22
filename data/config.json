@@ -19,7 +19,7 @@
     "TimeStep": 0.01,
     "SubSteps": 4,
     "MaxTime": {
-      "MaxTime": 200.0,
+      "MaxTime": 300.0,
       "TouchGround": true
     }
   },
@@ -27,6 +27,7 @@
     "Collisions": false,
     "Positions": [],
     "Creation": {
+      "FrameDelay": 2,
       "Enabled": true,
       "Count": 1600,
       "Damping": 0.8,

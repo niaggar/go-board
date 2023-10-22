@@ -71,23 +71,33 @@ func (gb *GaltonBoard) Run() {
 		gb.pathExporter.CreateFile()
 		defer gb.pathExporter.CloseFile()
 	}
-
 	if gb.histogramExporter != nil {
 		gb.histogramExporter.CreateFile()
 		defer gb.histogramExporter.CloseFile()
 	}
 
+	creationTime := float32(0)
+	creationFrameDelay := gb.config.CreateBalls.Creation.FrameDelay
+
 	for gb.currentTime < gb.maxTime {
+		if creationFrameDelay == 0 {
+			gb.BuildSpheres()
+		} else if creationTime >= creationFrameDelay {
+			gb.BuildDelaySpheres()
+			creationTime = 0
+		}
+
 		gb.engine.Update()
 
 		if gb.pathExporter != nil {
 			gb.engine.ExportCurrentState(gb.borders)
 		}
-
-		gb.currentTime += gb.timeStep
 		if gb.engine.IsEnded {
 			break
 		}
+
+		gb.currentTime += gb.timeStep
+		creationTime++
 	}
 
 	if gb.histogramExporter != nil {
@@ -120,6 +130,41 @@ func (gb *GaltonBoard) BuildSpheres() {
 			gb.engine.AddSphere(*sphere)
 		}
 	}
+}
+
+func (gb *GaltonBoard) BuildDelaySpheres() {
+	if !gb.config.CreateBalls.Creation.Enabled {
+		return
+	}
+
+	currentCount := len(gb.engine.Objects)
+	maxCount := gb.config.CreateBalls.Creation.Count
+	if currentCount >= maxCount {
+		return
+	}
+
+	canCollide := gb.config.CreateBalls.Collisions
+	mass := gb.config.CreateBalls.Creation.Mass
+	damping := gb.config.CreateBalls.Creation.Damping
+
+	rRange := gb.config.CreateBalls.Creation.Radius
+	xRange := gb.config.CreateBalls.Creation.Position.X
+	vxRange := gb.config.CreateBalls.Creation.Velocity.X
+	vyRange := gb.config.CreateBalls.Creation.Velocity.Y
+	bounds := gb.engine.Bounds
+
+	radius := rRange.Min + rand.Float32()*(rRange.Max-rRange.Min)
+	x := xRange.Min + rand.Float32()*(xRange.Max-xRange.Min)
+	y := bounds.Y - radius
+
+	vx := vxRange.Min + rand.Float32()*(vxRange.Max-vxRange.Min)
+	vy := vyRange.Min + rand.Float32()*(vyRange.Max-vyRange.Min)
+
+	sphere := models.NewSphere(x, y, radius, mass, damping, models.DYNAMIC)
+	sphere.CanCollide = canCollide
+	sphere.Velocity = gmath.NewVector(vx, vy)
+
+	gb.engine.AddSphere(*sphere)
 }
 
 func (gb *GaltonBoard) BuildObstacles() {
@@ -229,7 +274,7 @@ func (gb *GaltonBoard) buildSpheres() *[]models.Sphere {
 	for i := 0; i < nSpheres; i++ {
 		radius := rRange.Min + rand.Float32()*(rRange.Max-rRange.Min)
 		x := xRange.Min + rand.Float32()*(xRange.Max-xRange.Min)
-		y := bounds.Y - 2*radius
+		y := bounds.Y - radius
 
 		vx := vxRange.Min + rand.Float32()*(vxRange.Max-vxRange.Min)
 		vy := vyRange.Min + rand.Float32()*(vyRange.Max-vyRange.Min)

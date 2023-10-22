@@ -43,12 +43,13 @@ type NewConfig struct {
 		Collisions bool
 		Positions  []object
 		Creation   struct {
-			Enabled  bool
-			Count    int
-			Damping  float32
-			Mass     float32
-			Radius   minMax
-			Position struct {
+			FrameDelay float32
+			Enabled    bool
+			Count      int
+			Damping    float32
+			Mass       float32
+			Radius     minMax
+			Position   struct {
 				X minMax
 				Y minMax
 			}

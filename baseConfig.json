@@ -28,6 +28,7 @@
     "Positions": [],
     "Creation": {
       "Enabled": true,
+      "FrameDelay": 0.0,
       "Count": 500,
       "Damping": 0.8,
       "Mass": 1.0,

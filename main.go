@@ -28,7 +28,6 @@ func executeGaltonBoard(route string, wg *sync.WaitGroup) {
 
 	gb := logic.NewGaltonBoard(route)
 	gb.BuildObstacles()
-	gb.BuildSpheres()
 	//gb.BuildBorders()
 	gb.BuildMesh()
 
