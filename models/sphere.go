@@ -28,6 +28,7 @@ func NewSphere(x, y, radius, mass, damping float32, t int) *Sphere {
 		Force:       gmath.NewVector(0, 0),
 		Type:        t,
 		IsActive:    true,
+		CanCollide:  true,
 	}
 }
 

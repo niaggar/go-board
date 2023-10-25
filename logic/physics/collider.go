@@ -33,6 +33,10 @@ func ValidateCollision(sA, sB *models.Sphere) {
 		return
 	}
 
+	if !sA.CanCollide && !sB.CanCollide {
+		return
+	}
+
 	rmin := sA.Radius + sB.Radius
 	rminSqu := rmin * rmin
 	direction := gmath.Sub(sA.Position, sB.Position)
