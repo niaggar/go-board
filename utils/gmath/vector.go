@@ -2,6 +2,15 @@ package gmath
 
 import "math"
 
+type Vector struct {
+	X float32
+	Y float32
+}
+
+func NewVector(x, y float32) Vector {
+	return Vector{x, y}
+}
+
 func Normalice(v Vector) Vector {
 	if v.X == 0 && v.Y == 0 {
 		return v

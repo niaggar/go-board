@@ -1,47 +1,40 @@
 package physics
 
 import (
-	"go-board/export"
-	"go-board/gmath"
 	"go-board/models"
+	"go-board/utils"
 	"sync"
 )
 
 type Engine struct {
-	Gravity      gmath.Vector
-	Objects      []*models.Sphere
-	Obstacles    []*models.Sphere
-	Damping      float32
-	TimeStep     float32
-	SubSteps     int
-	Dt           float32
-	Bounds       gmath.Vector
-	PathExp      *export.Exporter
-	HisExp       *export.Exporter
-	Mesh         *models.Mesh
-	MaxSize      float32
-	TotalObjects int
-	Columns      int
-	ColumnsSize  float32
-	IsEnded      bool
+	*models.SimulationProps
+	*models.BoardProps
+	Balls     []*models.Ball
+	Obstacles []*models.Ball
+	Bounds    *models.Bounds
+	Mesh      *models.Mesh
+	Dt        float32
+	Ended     bool
 }
 
-func NewEngine(gravity, bounds gmath.Vector, damping, timeStep, columnsSize float32, subSteps, totalObjects, columns int, pathExp, hisExp *export.Exporter) Engine {
-	return Engine{
-		Gravity:      gravity,
-		Objects:      make([]*models.Sphere, 0),
-		Obstacles:    make([]*models.Sphere, 0),
-		Damping:      damping,
-		TimeStep:     timeStep,
-		SubSteps:     subSteps,
-		Dt:           timeStep / float32(subSteps),
-		Bounds:       bounds,
-		PathExp:      pathExp,
-		HisExp:       hisExp,
-		TotalObjects: totalObjects,
-		Columns:      columns,
-		ColumnsSize:  columnsSize,
+func NewEngine(simProps *models.SimulationProps, boardPros *models.BoardProps, bounds *models.Bounds) *Engine {
+	return &Engine{
+		SimulationProps: simProps,
+		BoardProps:      boardPros,
+		Bounds:          bounds,
+		Balls:           make([]*models.Ball, 0),
+		Obstacles:       make([]*models.Ball, 0),
+		Dt:              simProps.TimeStep / float32(simProps.SubSteps),
+		Mesh:            models.NewMesh(*bounds, simProps.MaxSize),
 	}
+}
+
+func (e *Engine) AddBall(s *models.Ball) {
+	e.Balls = append(e.Balls, s)
+}
+
+func (e *Engine) AddObstacle(s *models.Ball) {
+	e.Obstacles = append(e.Obstacles, s)
 }
 
 func (e *Engine) Update() {
@@ -54,83 +47,36 @@ func (e *Engine) Update() {
 func (e *Engine) updateBodiesParallel() {
 	var wg sync.WaitGroup
 
-	for i := 0; i < len(e.Objects); i++ {
+	for i := 0; i < len(e.Balls); i++ {
 		wg.Add(1)
+
 		go func(i int) {
 			defer wg.Done()
-			e.Objects[i].ApplyForce(&e.Gravity)
-			e.Objects[i].Update(e.Dt)
-			CollisionBounds(e.Objects[i], e.Bounds, e.Damping, true)
+
+			e.Balls[i].ApplyForce(&e.Gravity)
+			e.Balls[i].Update(e.Dt)
+			CollisionBounds(e.Balls[i], e.BoardProps, e.Bounds, e.Stop.TouchGround)
 		}(i)
 	}
 
 	wg.Wait()
-
-	countInactiveElements := 0
-	for i := 0; i < len(e.Objects); i++ {
-		if !e.Objects[i].IsActive {
-			countInactiveElements++
-		}
-	}
-
-	if countInactiveElements == e.TotalObjects {
-		e.IsEnded = true
-	}
 }
 
 func (e *Engine) validateCollisionsParallel() {
-	e.UpdateMesh()
+	e.updateMesh()
 
-	verticalNumDivisions := 10
-	horizontalNumDivisions := 10
-
-	verticalDivisionSize := e.Mesh.Rows / verticalNumDivisions
-	horizontalDivisionSize := e.Mesh.Columns / horizontalNumDivisions
+	verDivSize := e.Mesh.Rows / utils.GridParallelDivisionVertical
+	horDivSize := e.Mesh.Columns / utils.GridParallelDivisionHorizontal
 
 	var wg sync.WaitGroup
 
-	for sectVertical := 0; sectVertical <= verticalNumDivisions; sectVertical++ {
-		for sectHorizontal := 0; sectHorizontal <= horizontalNumDivisions; sectHorizontal++ {
-			startX := sectHorizontal * horizontalDivisionSize
-			startY := sectVertical * verticalDivisionSize
+	for sectVer := 0; sectVer <= utils.GridParallelDivisionVertical; sectVer++ {
+		for sectHor := 0; sectHor <= utils.GridParallelDivisionHorizontal; sectHor++ {
+			startX := sectHor * horDivSize
+			startY := sectVer * verDivSize
 
 			wg.Add(1)
-			go func(startX, startY, horizontalDivisionSize, verticalDivisionSize int) {
-				defer wg.Done()
-
-				for i := startX; i < startX+horizontalDivisionSize; i++ {
-					for j := startY; j < startY+verticalDivisionSize; j++ {
-						objects, obstacles := e.Mesh.GetElementsAround(i, j)
-
-						for k := 0; k < len(objects); k++ {
-							if !e.Objects[*objects[k]].IsActive {
-								continue
-							}
-
-							for l := 0; l < len(obstacles); l++ {
-								if !e.Obstacles[*obstacles[l]].IsActive {
-									continue
-								}
-
-								ValidateCollision(e.Objects[*objects[k]], e.Obstacles[*obstacles[l]])
-							}
-
-							for m := k + 1; m < len(objects); m++ {
-								if !e.Objects[*objects[m]].IsActive {
-									continue
-								}
-
-								sA := e.Objects[*objects[k]]
-								sB := e.Objects[*objects[m]]
-
-								if sA != sB {
-									ValidateCollision(sA, sB)
-								}
-							}
-						}
-					}
-				}
-			}(startX, startY, horizontalDivisionSize, verticalDivisionSize)
+			go e.collisionsCellsAround(startX, startY, horDivSize, verDivSize, &wg)
 		}
 	}
 
@@ -138,57 +84,52 @@ func (e *Engine) validateCollisionsParallel() {
 	e.Mesh.Clear()
 }
 
-func (e *Engine) ExportCurrentState(borders []*gmath.Vector) {
-	total := len(e.Objects) + len(e.Obstacles) + len(borders)
+func (e *Engine) collisionsCellsAround(startX, startY, horDivSize, verDivSize int, wg *sync.WaitGroup) {
+	defer wg.Done()
 
-	content := export.GetExportHeader(total)
-	e.PathExp.Write(content)
+	for i := startX; i < startX+horDivSize; i++ {
+		for j := startY; j < startY+verDivSize; j++ {
+			ballsIndex, obstaclesIndex := e.Mesh.GetElementsAround(i, j)
 
-	itemCount := 0
-	for itemCount < len(e.Objects) {
-		content = export.GetExportPath(itemCount, e.Objects[itemCount])
-		e.PathExp.Write(content)
-		itemCount++
+			for k := 0; k < len(ballsIndex); k++ {
+				ball := e.Balls[*ballsIndex[k]]
+				if !ball.Active {
+					continue
+				}
+
+				for l := 0; l < len(obstaclesIndex); l++ {
+					obstacle := e.Obstacles[*obstaclesIndex[l]]
+					if !obstacle.Active {
+						continue
+					}
+
+					ValidateCollision(ball, obstacle)
+				}
+
+				// Validate that collisions between balls are activated
+				if !e.Collisions {
+					continue
+				}
+
+				for m := k + 1; m < len(ballsIndex); m++ {
+					otherBall := e.Balls[*ballsIndex[m]]
+					if !otherBall.Active {
+						continue
+					}
+
+					ValidateCollision(ball, otherBall)
+				}
+			}
+		}
 	}
-	for j := 0; j < len(e.Obstacles); j++ {
-		content = export.GetExportPath(itemCount, e.Obstacles[j])
-		e.PathExp.Write(content)
-		itemCount++
-	}
-	for j := 0; j < len(borders); j++ {
-		content = export.GetExportPathBorders(itemCount, borders[j])
-		e.PathExp.Write(content)
-		itemCount++
-	}
 }
 
-func (e *Engine) ExportHistogram() {
-	finalCountByColumn := make([]int, e.Columns)
-
-	for i := 0; i < len(e.Objects); i++ {
-		pos := int(e.Objects[i].Position.X / e.ColumnsSize)
-		finalCountByColumn[pos]++
-	}
-
-	content := export.GetExportHistogram(finalCountByColumn)
-	e.HisExp.Write(content)
-}
-
-func (e *Engine) AddSphere(s models.Sphere) {
-	e.Objects = append(e.Objects, &s)
-}
-
-func (e *Engine) AddObstacle(s models.Sphere) {
-	e.Obstacles = append(e.Obstacles, &s)
-}
-
-func (e *Engine) CreateMesh() {
-	e.Mesh = models.NewMesh(e.Bounds, e.MaxSize)
-}
-
-func (e *Engine) UpdateMesh() {
-	for i := 0; i < len(e.Objects); i++ {
-		e.Mesh.AddObject(e.Objects[i].Position, i)
+func (e *Engine) updateMesh() {
+	for i := 0; i < len(e.Balls); i++ {
+		ball := e.Balls[i]
+		if ball.Active {
+			e.Mesh.AddBall(ball.Position, i)
+		}
 	}
 
 	for i := 0; i < len(e.Obstacles); i++ {

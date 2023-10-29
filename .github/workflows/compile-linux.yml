@@ -14,22 +14,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.21'
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
 
-    - name: Compile
-      run: |
-        mkdir -p build/data/configs build/data/exports
-        go build -o build/gboard
-        cp .config.json build/
-        cp model.config.json build/data/configs/
+      - name: Compile
+        run: |
+          mkdir -p build/data/configs build/data/exports
+          go build -o build/gboard
+          cp .config.json build/
+          cp model.config.json build/data/configs/
 
-    - name: Publish
-      uses: actions/upload-artifact@v2
-      with:
-        name: gboard-linux-executable
-        path: build/
+      - name: Publish
+        uses: actions/upload-artifact@v2
+        with:
+          name: gboard-linux-executable
+          path: build/

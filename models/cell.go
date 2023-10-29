@@ -1,7 +1,7 @@
 package models
 
 type Cell struct {
-	objects   []*int
+	balls     []*int
 	obstacles []*int
 }
 
@@ -10,11 +10,11 @@ func NewCell() *Cell {
 }
 
 func (c *Cell) GetObjects() ([]*int, []*int) {
-	return c.objects, c.obstacles
+	return c.balls, c.obstacles
 }
 
 func (c *Cell) AddObject(id int) {
-	c.objects = append(c.objects, &id)
+	c.balls = append(c.balls, &id)
 }
 
 func (c *Cell) AddObstacle(id int) {
@@ -22,6 +22,6 @@ func (c *Cell) AddObstacle(id int) {
 }
 
 func (c *Cell) Clear() {
-	c.objects = c.objects[:0]
+	c.balls = c.balls[:0]
 	c.obstacles = c.obstacles[:0]
 }

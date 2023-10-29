@@ -2,7 +2,6 @@ package gmath
 
 import (
 	"math/rand"
-	"time"
 )
 
 func GetRandomInt(min int, max int) int {
@@ -19,9 +18,4 @@ func GetRandomBool() bool {
 
 func GetRandomOnPoint(point float32, delta float32) float32 {
 	return GetRandomFloat(point-delta, point+delta)
-}
-
-func GetRandomID() int {
-	rand.NewSource(time.Now().UnixNano())
-	return rand.Intn(10000)
 }

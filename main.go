@@ -40,10 +40,10 @@ func executeGaltonBoard(gbConfigRoute, exportRoute string, wg *sync.WaitGroup) {
 
 	currentTime := time.Now()
 	timeTxt := currentTime.Format("2006-01-02-15-04-05")
-	gbConfig := config.GetNewConfiguration(gbConfigRoute)
-	baseRoute := fmt.Sprintf("%s/exp-%s-%s", exportRoute, gbConfig.Name, timeTxt)
+	gbConfig := config.GetConfiguration(gbConfigRoute)
+	baseRoute := fmt.Sprintf("%s/exp-%s-%s", exportRoute, gbConfig.Experiment.Name, timeTxt)
 
-	fmt.Printf("Execute of --%s-- at %s\n", gbConfig.Name, timeTxt)
+	fmt.Printf("Execute of --%s-- at %s\n", gbConfig.Experiment.Name, timeTxt)
 	if _, err := os.Stat(baseRoute); os.IsNotExist(err) {
 		err := os.MkdirAll(baseRoute, os.ModePerm)
 		if err != nil {
@@ -53,7 +53,7 @@ func executeGaltonBoard(gbConfigRoute, exportRoute string, wg *sync.WaitGroup) {
 	}
 
 	var wgInternal sync.WaitGroup
-	for i := 0; i < gbConfig.NumExecutions; i++ {
+	for i := 0; i < gbConfig.Experiment.Executions; i++ {
 		wgInternal.Add(1)
 
 		go func(pos int, baseRouteWg string) {
@@ -62,11 +62,12 @@ func executeGaltonBoard(gbConfigRoute, exportRoute string, wg *sync.WaitGroup) {
 			exportHistoRoute := baseRouteWg + fmt.Sprintf("/histo-%d.dat", pos)
 			exportPathRoute := baseRouteWg + fmt.Sprintf("/path-%d.dat", pos)
 
-			gb := logic.NewGaltonBoard(&gbConfig, exportPathRoute, exportHistoRoute)
-			gb.BuildObstacles()
-			gb.BuildBorders()
-			gb.BuildMesh()
+			gbConfig.Experiment.ExportHistogram.Route = exportHistoRoute
+			gbConfig.Experiment.ExportPaths.Route = exportPathRoute
+
+			gb := logic.NewGaltonBoard(&gbConfig)
 			gb.Run()
+			gb.Finish()
 		}(i, baseRoute)
 	}
 
@@ -75,7 +76,7 @@ func executeGaltonBoard(gbConfigRoute, exportRoute string, wg *sync.WaitGroup) {
 	finalTime := time.Now()
 	elapsed := finalTime.Sub(currentTime)
 	fmt.Printf("Total time: %v\n", elapsed)
-	fmt.Printf("Exp --%s-- saved at: %s\n", gbConfig.Name, baseRoute)
+	fmt.Printf("Exp --%s-- saved at: %s\n", gbConfig.Experiment.Name, baseRoute)
 }
 
 func parseSelection(selection string) []int {
@@ -134,5 +135,5 @@ func selectConfigsFiles(files *map[int]string) []int {
 func getBaseAppRoute() (string, string) {
 	globalConf := config.GetGlobalConfiguration()
 
-	return globalConf.Base + globalConf.Config, globalConf.Base + globalConf.Export
+	return globalConf.Base + globalConf.Configs, globalConf.Base + globalConf.Exports
 }

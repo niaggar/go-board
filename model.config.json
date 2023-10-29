@@ -1,76 +1,95 @@
 {
-  "Name": "model",
-  "NumExecutions": 1,
-  "ExportFrameRate": 30,
-  "ExportPath": {
-    "Enabled": true
-  },
-  "ExportHisto": {
-    "Enabled": true
+  "Experiment": {
+    "Name": "Test",
+    "FrameRate": 30,
+    "Executions": 1,
+    "ExportPaths": {
+      "Active": true,
+      "Route": ""
+    },
+    "ExportHistogram": {
+      "Active": true,
+      "Route": ""
+    }
   },
   "Board": {
-    "GridSize": 5.0,
-    "RowNumber": 50,
-    "ColumnNumber": 40,
-    "Damping": 0.4,
+    "CellSize": 5.0,
+    "RowNumber": 10,
+    "ColumnNumber": 10,
+    "Damping": 0.4
+  },
+  "Simulation": {
+    "TimeStep": 0.01,
+    "SubSteps": 5,
     "Gravity": {
       "X": 0.0,
       "Y": -9.8
     },
-    "TimeStep": 0.01,
-    "SubSteps": 8,
-    "MaxTime": {
+    "MaxSize": 4.0,
+    "Collisions": true,
+    "Stop": {
       "MaxTime": 100.0,
       "TouchGround": true
     }
   },
-  "CreateBalls": {
-    "Collisions": false,
-    "Positions": [],
+  "Balls": {
+    "Existing": [],
     "Creation": {
       "Enabled": true,
-      "FrameDelay": 1.0,
-      "Count": 500,
-      "Damping": 0.8,
+      "FrameDelay": 1,
+      "Count": 50,
+      "Damping": 0.6,
       "Mass": 1.0,
       "Radius": {
-        "Min": 0.2,
-        "Max": 0.5
+        "Min": 0.5,
+        "Max": 1.0
       },
       "Position": {
         "X": {
           "Min": 20.0,
-          "Max": 180.0
+          "Max": 30.0
         },
         "Y": {
           "Min": 0.0,
-          "Max": 5.0
+          "Max": 0.0
         }
       },
       "Velocity": {
         "X": {
-          "Min": -60.0,
-          "Max": 60.0
+          "Min": -2.0,
+          "Max": 2.0
         },
         "Y": {
-          "Min": -10.0,
-          "Max": 0.0
+          "Min": -2.0,
+          "Max": 2.0
         }
       }
     }
   },
-  "CreateObstacles": {
-    "Positions": [],
+  "Obstacles": {
+    "Existing": [],
     "Creation": {
       "Enabled": true,
-      "Damping": 0.6,
-      "Mass": 3.0,
+      "Damping": 0.4,
+      "Mass": 5.0,
       "Radius": {
-        "Min": 0.5,
-        "Max": 1
+        "Range": {
+          "Min": 1.0,
+          "Max": 1.0
+        },
+        "Direction": 1
       },
-      "Direction":0,
-      "YOffset": 0
+      "Movement": {
+        "Enabled": false,
+        "Range": {
+          "Min": -2.0,
+          "Max": 2.0
+        },
+        "TimeStep": {
+          "Min": 0.02,
+          "Max": 0.05
+        }
+      }
     }
   }
 }

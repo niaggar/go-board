@@ -1,60 +1,56 @@
 package physics
 
 import (
-	"go-board/gmath"
 	"go-board/models"
+	"go-board/utils/gmath"
 	"math"
 )
 
-func CollisionBounds(s *models.Sphere, bounds gmath.Vector, damping float32, detectFloor bool) {
+func CollisionBounds(s *models.Ball, boardProps *models.BoardProps, bounds *models.Bounds, detectFloor bool) {
 	if s.Position.X-s.Radius < 0 {
 		s.Position.X = s.Radius
-		s.Velocity.X = -s.Velocity.X * damping
-	} else if s.Position.X+s.Radius > bounds.X {
-		s.Position.X = bounds.X - s.Radius
-		s.Velocity.X = -s.Velocity.X * damping
+		s.Velocity.X = -s.Velocity.X * boardProps.Damping
+	} else if s.Position.X+s.Radius > bounds.Width {
+		s.Position.X = bounds.Width - s.Radius
+		s.Velocity.X = -s.Velocity.X * boardProps.Damping
 	}
 
 	if s.Position.Y-s.Radius < 0 {
 		s.Position.Y = s.Radius
-		s.Velocity.Y = -s.Velocity.Y * damping
+		s.Velocity.Y = -s.Velocity.Y * boardProps.Damping
 
 		if detectFloor {
-			s.IsActive = false
+			s.Active = false
 		}
-	} else if s.Position.Y+s.Radius > bounds.Y {
-		s.Position.Y = bounds.Y - s.Radius
-		s.Velocity.Y = -s.Velocity.Y * damping
+	} else if s.Position.Y+s.Radius > bounds.Height {
+		s.Position.Y = bounds.Height - s.Radius
+		s.Velocity.Y = -s.Velocity.Y * boardProps.Damping
 	}
 }
 
-func ValidateCollision(sA, sB *models.Sphere) {
-	if sA.Type == models.STATIC && sB.Type == models.STATIC {
+func ValidateCollision(sA, sB *models.Ball) {
+	if sA.Static && sB.Static {
 		return
 	}
 
-	if !sA.CanCollide && !sB.CanCollide {
-		return
-	}
-
-	rmin := sA.Radius + sB.Radius
-	rminSqu := rmin * rmin
+	rMin := sA.Radius + sB.Radius
+	rMinSqr := rMin * rMin
 	direction := gmath.Sub(sA.Position, sB.Position)
 	distanceSqu := gmath.LengthSqu(direction)
 
-	if distanceSqu < rminSqu {
+	if distanceSqu < rMinSqr {
 		norm := gmath.Normalice(direction)
-		overlap := float32(math.Sqrt(float64(distanceSqu)) - float64(rmin))
+		overlap := float32(math.Sqrt(float64(distanceSqu)) - float64(rMin))
 
 		separateSphere(sA, sB, norm, overlap)
 		resolveCollision(sA, sB, norm)
 	}
 }
 
-func separateSphere(sA, sB *models.Sphere, norm gmath.Vector, overlap float32) {
-	if sA.Type == models.STATIC {
+func separateSphere(sA, sB *models.Ball, norm gmath.Vector, overlap float32) {
+	if sA.Static {
 		sB.Position = gmath.Add(sB.Position, gmath.Scale(norm, overlap))
-	} else if sB.Type == models.STATIC {
+	} else if sB.Static {
 		sA.Position = gmath.Sub(sA.Position, gmath.Scale(norm, overlap))
 	} else {
 		sA.Position = gmath.Sub(sA.Position, gmath.Scale(norm, overlap/2))
@@ -62,11 +58,7 @@ func separateSphere(sA, sB *models.Sphere, norm gmath.Vector, overlap float32) {
 	}
 }
 
-func resolveCollision(sA, sB *models.Sphere, norm gmath.Vector) {
-	if sA.Type == models.STATIC && sB.Type == models.STATIC {
-		return
-	}
-
+func resolveCollision(sA, sB *models.Ball, norm gmath.Vector) {
 	reducedMass := 1.0 / (sA.InverseMass + sB.InverseMass)
 	vA := sA.Velocity
 	vB := sB.Velocity
@@ -82,10 +74,10 @@ func resolveCollision(sA, sB *models.Sphere, norm gmath.Vector) {
 
 	impulse := gmath.Scale(norm, j)
 
-	if sA.Type == models.DYNAMIC {
+	if !sA.Static {
 		sA.Velocity = gmath.Add(sA.Velocity, gmath.Scale(impulse, sA.InverseMass))
 	}
-	if sB.Type == models.DYNAMIC {
+	if !sB.Static {
 		sB.Velocity = gmath.Sub(sB.Velocity, gmath.Scale(impulse, sB.InverseMass))
 	}
 }

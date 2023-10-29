@@ -1,5 +1,5 @@
 {
   "base": "./",
-  "config": "data/configs",
-  "export": "data/exports"
+  "configs": "data/configs",
+  "exports": "data/exports"
 }
