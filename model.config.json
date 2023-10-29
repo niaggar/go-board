@@ -1,8 +1,10 @@
 {
   "Experiment": {
-    "Name": "Test",
-    "FrameRate": 30,
-    "Executions": 1,
+    "Name": "MODEL",
+    "FrameRate": 15,
+    "CreationFrame": 1,
+    "CreationNum": 1,
+    "Executions": 3,
     "ExportPaths": {
       "Active": true,
       "Route": ""
@@ -14,21 +16,21 @@
   },
   "Board": {
     "CellSize": 5.0,
-    "RowNumber": 10,
-    "ColumnNumber": 10,
+    "RowNumber": 50,
+    "ColumnNumber": 70,
     "Damping": 0.4
   },
   "Simulation": {
     "TimeStep": 0.01,
-    "SubSteps": 5,
+    "SubSteps": 4,
     "Gravity": {
       "X": 0.0,
-      "Y": -9.8
+      "Y": -98.1
     },
     "MaxSize": 4.0,
     "Collisions": true,
     "Stop": {
-      "MaxTime": 100.0,
+      "MaxTime": 200.0,
       "TouchGround": true
     }
   },
@@ -36,18 +38,17 @@
     "Existing": [],
     "Creation": {
       "Enabled": true,
-      "FrameDelay": 1,
-      "Count": 50,
-      "Damping": 0.6,
+      "Count": 5000,
+      "Damping": 0.4,
       "Mass": 1.0,
       "Radius": {
-        "Min": 0.5,
-        "Max": 1.0
+        "Min": 0.4,
+        "Max": 0.8
       },
       "Position": {
         "X": {
-          "Min": 20.0,
-          "Max": 30.0
+          "Min": -3.0,
+          "Max": 3.0
         },
         "Y": {
           "Min": 0.0,
@@ -56,12 +57,12 @@
       },
       "Velocity": {
         "X": {
-          "Min": -2.0,
-          "Max": 2.0
+          "Min": -0.5,
+          "Max": 0.5
         },
         "Y": {
-          "Min": -2.0,
-          "Max": 2.0
+          "Min": -10.0,
+          "Max": 0.0
         }
       }
     }
@@ -70,11 +71,11 @@
     "Existing": [],
     "Creation": {
       "Enabled": true,
-      "Damping": 0.4,
-      "Mass": 5.0,
+      "Damping": 0.23,
+      "Mass": 10000.0,
       "Radius": {
         "Range": {
-          "Min": 1.0,
+          "Min": 0.8,
           "Max": 1.0
         },
         "Direction": 1

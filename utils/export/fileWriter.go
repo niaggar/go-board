@@ -19,7 +19,9 @@ func NewFileWriter(path string) *FileWriter {
 
 func (e *FileWriter) CreateFile() {
 	file, err := os.Create(e.path)
-	writer := bufio.NewWriterSize(file, 128*1024*40)
+
+	bufferSize := 400 * 1024 * 1024
+	writer := bufio.NewWriterSize(file, bufferSize)
 
 	if err != nil {
 		panic(err)
