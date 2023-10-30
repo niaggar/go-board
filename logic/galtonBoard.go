@@ -37,9 +37,9 @@ func NewGaltonBoard(config *models.ConfigurationFile) *GaltonBoard {
 		BoardProps:      &config.Board,
 		SimulationProps: &config.Simulation,
 		ExperimentProps: &config.Experiment,
-		//Borders:         BuildBorders(&bounds),
-		Balls:     BuildSpheres(&config.Balls, &bounds),
-		Obstacles: BuildObstacles(&config.Obstacles, &config.Board, &bounds),
+		Borders:         BuildBorders(&bounds),
+		Balls:           BuildSpheres(&config.Balls, &bounds),
+		Obstacles:       BuildObstacles(&config.Obstacles, &config.Board, &bounds),
 	}
 }
 

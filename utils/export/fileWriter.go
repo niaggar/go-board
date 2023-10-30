@@ -19,13 +19,12 @@ func NewFileWriter(path string) *FileWriter {
 
 func (e *FileWriter) CreateFile() {
 	file, err := os.Create(e.path)
-
-	bufferSize := 400 * 1024 * 1024
-	writer := bufio.NewWriterSize(file, bufferSize)
-
 	if err != nil {
 		panic(err)
 	}
+
+	bufferSize := 40 * 1024 * 1024
+	writer := bufio.NewWriterSize(file, bufferSize)
 
 	e.file = file
 	e.writer = writer
@@ -36,6 +35,7 @@ func (e *FileWriter) CloseFile() {
 	if err != nil {
 		return
 	}
+
 	err = e.file.Close()
 	if err != nil {
 		return
@@ -44,7 +44,6 @@ func (e *FileWriter) CloseFile() {
 
 func (e *FileWriter) Write(content string) {
 	_, err := e.writer.WriteString(content)
-
 	if err != nil {
 		panic(err)
 	}
