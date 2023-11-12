@@ -37,14 +37,14 @@ func (e *Engine) AddObstacle(s *models.Ball) {
 	e.Obstacles = append(e.Obstacles, s)
 }
 
-func (e *Engine) Update() {
+func (e *Engine) Update(dt float32) {
 	for i := 0; i < e.SubSteps; i++ {
-		e.updateBodiesParallel()
+		e.updateBodiesParallel(dt)
 		e.validateCollisionsParallel()
 	}
 }
 
-func (e *Engine) updateBodiesParallel() {
+func (e *Engine) updateBodiesParallel(dt float32) {
 	var wg sync.WaitGroup
 
 	for i := 0; i < len(e.Balls); i++ {
@@ -54,7 +54,7 @@ func (e *Engine) updateBodiesParallel() {
 			defer wg.Done()
 
 			e.Balls[i].ApplyForce(&e.Gravity)
-			e.Balls[i].Update(e.Dt)
+			e.Balls[i].Update(dt)
 			CollisionBounds(e.Balls[i], e.BoardProps, e.Bounds, e.Stop.TouchGround)
 		}(i)
 	}

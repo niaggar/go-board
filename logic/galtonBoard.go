@@ -19,6 +19,12 @@ type GaltonBoard struct {
 	Balls     []*models.Ball
 	Obstacles []*models.Ball
 	Borders   []*gmath.Vector
+
+	currentTime  float32
+	currentFrame int
+	exportFrame  int
+
+	Finished bool
 }
 
 func NewGaltonBoard(config *models.ConfigurationFile) *GaltonBoard {
@@ -43,42 +49,60 @@ func NewGaltonBoard(config *models.ConfigurationFile) *GaltonBoard {
 	}
 }
 
-func (gb *GaltonBoard) Run() {
-	currentTime := float32(0)
-	currentFrame := 0
-	exportFrame := 0
+func (gb *GaltonBoard) RunAll() {
+	gb.currentTime = 0
+	gb.currentFrame = 0
+	gb.exportFrame = 0
 
 	// Add obstacles
 	gb.AddObstacle()
 
-	for currentTime < gb.Stop.MaxTime {
+	dt := gb.TimeStep
+	for gb.currentTime < gb.Stop.MaxTime && !gb.Finished {
+		gb.RunStep(dt)
+
+		if gb.Finished {
+			break
+		}
+	}
+}
+
+func (gb *GaltonBoard) RunStep(dt float32) {
+	if gb.currentTime < gb.Stop.MaxTime && !gb.Finished {
 		// Add balls
-		gb.AddBall(currentFrame)
+		gb.AddBall(gb.currentFrame)
 
 		// Update engine
-		gb.Engine.Update()
+		gb.Engine.Update(dt)
 
 		// Export path
-		if exportFrame >= gb.FrameRate {
-			exportFrame = 0
+		if gb.exportFrame >= gb.FrameRate {
+			gb.exportFrame = 0
 			gb.ExportPath()
 		}
 
 		// Validate stop
-		stop := gb.ValidateStop(currentTime)
+		stop := gb.ValidateStop(gb.currentTime)
 		if stop {
-			break
+			gb.Finished = true
 		}
 
-		currentTime += gb.TimeStep
-		currentFrame++
-		exportFrame++
+		gb.currentTime += gb.TimeStep
+		gb.currentFrame++
+		gb.exportFrame++
+	} else {
+		gb.Finished = true
 	}
-
-	gb.ExportHistogram()
 }
 
 func (gb *GaltonBoard) Finish() {
+	gb.ExportHistogram()
+
+	gb.currentFrame = 0
+	gb.currentTime = 0
+	gb.exportFrame = 0
+	gb.Finished = false
+
 	gb.Exporter.CloseFiles()
 }
 
