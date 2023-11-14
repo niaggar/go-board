@@ -6,15 +6,15 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"go-board/logic"
+	"go-board/logic/config"
+	"go-board/utils"
 	"go-board/utils/gmath"
 	"image/color"
+	"log"
 	"math"
+	"os"
 	"time"
-)
-
-const (
-	screenWidth  = 500
-	screenHeight = 500
 )
 
 type GaltonBoardWindow struct {
@@ -25,8 +25,11 @@ type GaltonBoardWindow struct {
 	camZoomSpeed  float64
 	camDragSpeed  float64
 	camDrag       bool
-
-	last time.Time
+	last          time.Time
+	galtonBoard   *logic.GaltonBoard
+	imageBoard    *ebiten.Image
+	scale         float32
+	dt            float64
 }
 
 func (g *GaltonBoardWindow) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -35,6 +38,7 @@ func (g *GaltonBoardWindow) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func (g *GaltonBoardWindow) Update() error {
 	dt := time.Since(g.last).Seconds()
+	g.dt = dt
 	g.last = time.Now()
 
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonMiddle) {
@@ -73,6 +77,7 @@ func (g *GaltonBoardWindow) Update() error {
 
 	_, wy := ebiten.Wheel()
 	g.camZoom *= math.Pow(g.camZoomSpeed, wy)
+	g.galtonBoard.RunStep(float32(dt))
 
 	return nil
 }
@@ -88,36 +93,92 @@ func (g *GaltonBoardWindow) Draw(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Concat(g.Camera())
 
-	image := ebiten.NewImage(300, 300)
+	//g.imageBoard.Fill(color.RGBA{R: 0, G: 0, B: 255, A: 255})
+	drawObjects(g.imageBoard, g.galtonBoard, g.scale)
 
-	ballColor := color.RGBA{R: 255, B: 255, A: 255}
-	image.Fill(color.RGBA{R: 0, G: 0, B: 255, A: 255})
-	vector.DrawFilledCircle(image, 0, 0, 100, ballColor, false)
-
-	screen.DrawImage(image, op)
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %0.2f", ebiten.ActualFPS()))
+	screen.DrawImage(g.imageBoard, op)
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %0.2f DT: %f", ebiten.ActualFPS(), g.dt))
 }
 
 func RunWindow() {
+	configsRoute, exportRoute := utils.GetBaseAppRoute()
+	configsFiles := utils.GetNewExpConfigs(configsRoute)
+	configsSelected := utils.SelectConfigsFiles(&configsFiles)
+
+	configSelected := configsSelected[0]
+	gbConfigRoute := configsRoute + "/" + configsFiles[configSelected]
+
+	board := executeGaltonBoardWindow(gbConfigRoute, exportRoute)
+	width := board.CellSize * float32(board.ColumnNumber)
+	height := board.CellSize * float32(board.RowNumber)
+	scale := float32(10)
+
+	image := ebiten.NewImage(int(width*scale), int(height*scale))
+
 	ebiten.SetWindowTitle("Galton Board")
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 
 	galtonBoard := &GaltonBoardWindow{
-		camPos: gmath.Vector{
-			X: 0,
-			Y: 0,
-		},
-		camCenterMove: gmath.Vector{
-			X: 0,
-			Y: 0,
-		},
-		camSpeed:     500,
-		camZoom:      1,
-		camZoomSpeed: 1.2,
-		camDragSpeed: 1,
+		camPos:        gmath.Vector{X: 0, Y: 0},
+		camCenterMove: gmath.Vector{X: 0, Y: 0},
+		camSpeed:      500,
+		camZoom:       1,
+		camZoomSpeed:  1.1,
+		camDragSpeed:  1,
+		galtonBoard:   board,
+		imageBoard:    image,
+		scale:         scale,
 	}
 
 	if err := ebiten.RunGame(galtonBoard); err != nil {
 		panic(err)
+	}
+}
+
+func executeGaltonBoardWindow(gbConfigRoute, exportRoute string) *logic.GaltonBoard {
+	currentTime := time.Now()
+	timeTxt := currentTime.Format("2006-01-02-15-04-05")
+	gbConfig := config.GetConfiguration(gbConfigRoute)
+	baseRoute := fmt.Sprintf("%s/exp-%s-%s", exportRoute, gbConfig.Experiment.Name, timeTxt)
+
+	fmt.Printf("Execute of --%s-- at %s\n", gbConfig.Experiment.Name, timeTxt)
+	if _, err := os.Stat(baseRoute); os.IsNotExist(err) {
+		err := os.MkdirAll(baseRoute, os.ModePerm)
+		if err != nil {
+			log.Fatal(err)
+			return nil
+		}
+	}
+
+	exportHistoRoute := baseRoute + fmt.Sprintf("/histo-%d.dat", 1)
+	exportPathRoute := baseRoute + fmt.Sprintf("/path-%d.dat", 1)
+
+	gbConfig.Experiment.ExportHistogram.Route = exportHistoRoute
+	gbConfig.Experiment.ExportPaths.Route = exportPathRoute
+
+	gb := logic.NewGaltonBoard(&gbConfig)
+
+	return gb
+}
+
+func drawObjects(image *ebiten.Image, board *logic.GaltonBoard, scale float32) {
+	for i := 0; i < len(board.Balls); i++ {
+		ballColor := color.RGBA{R: 255, B: 255, A: 255}
+
+		cx := board.Balls[i].Position.X * scale
+		cy := board.Balls[i].Position.Y * scale
+		radius := board.Balls[i].Radius * scale
+
+		vector.DrawFilledCircle(image, cx, cy, radius, ballColor, false)
+	}
+
+	for i := 0; i < len(board.Obstacles); i++ {
+		ballColor := color.RGBA{R: 255, B: 255, A: 255}
+
+		cx := board.Obstacles[i].Position.X * scale
+		cy := board.Obstacles[i].Position.Y * scale
+		radius := board.Obstacles[i].Radius * scale
+
+		vector.DrawFilledCircle(image, cx, cy, radius, ballColor, false)
 	}
 }
