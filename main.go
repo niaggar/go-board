@@ -3,5 +3,5 @@ package main
 import "go-board/app"
 
 func main() {
-	app.RunWindow()
+	app.RunConsole()
 }
