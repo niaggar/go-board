@@ -31,7 +31,12 @@ func GetCell(m *Mesh, position gmath.Vector) *Cell {
 	x := int(position.X / m.MaxSize)
 	y := int(position.Y / m.MaxSize)
 
-	return m.Cells[y*m.Columns+x]
+	index := y*m.Columns + x
+	if index >= len(m.Cells) || index < 0 {
+		return &Cell{}
+	}
+
+	return m.Cells[index]
 }
 
 func (m *Mesh) AddBall(position gmath.Vector, id int) {

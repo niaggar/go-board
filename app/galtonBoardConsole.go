@@ -5,6 +5,7 @@ import (
 	"go-board/logic"
 	"go-board/logic/config"
 	"go-board/utils"
+	"go-board/utils/export"
 	"log"
 	"os"
 	"sync"
@@ -60,6 +61,7 @@ func executeGaltonBoard(gbConfigRoute, exportRoute string, wg *sync.WaitGroup) {
 
 			exportHistoRoute := baseRouteWg + fmt.Sprintf("/histo-%d.dat", pos)
 			exportPathRoute := baseRouteWg + fmt.Sprintf("/path-%d.dat", pos)
+			exportHistoImg := baseRouteWg + fmt.Sprintf("/histo-%d.png", pos)
 
 			gbConfig.Experiment.ExportHistogram.Route = exportHistoRoute
 			gbConfig.Experiment.ExportPaths.Route = exportPathRoute
@@ -67,6 +69,8 @@ func executeGaltonBoard(gbConfigRoute, exportRoute string, wg *sync.WaitGroup) {
 			gb := logic.NewGaltonBoard(&gbConfig)
 			gb.RunAll()
 			gb.Finish()
+
+			export.PlotHistogram(exportHistoImg, exportHistoRoute)
 		}(i, baseRoute)
 	}
 

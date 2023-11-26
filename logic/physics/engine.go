@@ -47,6 +47,10 @@ func (e *Engine) Update(dt float32) {
 func (e *Engine) updateBodiesParallel(dt float32) {
 	var wg sync.WaitGroup
 
+	for i := 0; i < len(e.Obstacles); i++ {
+		e.Obstacles[i].Update(dt)
+	}
+
 	for i := 0; i < len(e.Balls); i++ {
 		wg.Add(1)
 

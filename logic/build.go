@@ -12,9 +12,6 @@ func BuildSpheres(props *models.CreationBalls, bounds *models.Bounds) []*models.
 	balls := make([]*models.Ball, 0)
 
 	if autoCreation {
-		ballActive := true
-		ballObstacle := false
-		ballStatic := false
 		ballProps := models.BallProps{
 			Damping:     creationProps.Damping,
 			Mass:        creationProps.Mass,
@@ -27,7 +24,7 @@ func BuildSpheres(props *models.CreationBalls, bounds *models.Bounds) []*models.
 			xPos := bounds.Width/2 + gmath.GetRandomFloat(creationProps.Position.X.Min, creationProps.Position.X.Max)
 			yPos := bounds.Height + gmath.GetRandomFloat(creationProps.Position.Y.Min, creationProps.Position.Y.Max)
 
-			ball := models.NewBall(xPos, yPos, ballActive, ballStatic, ballObstacle, ballProps)
+			ball := models.NewBall(xPos, yPos, true, false, false, ballProps)
 			balls = append(balls, ball)
 		}
 	}
@@ -47,6 +44,12 @@ func BuildObstacles(props *models.CreationObstacles, board *models.BoardProps, b
 			Damping:     creationProps.Damping,
 			Mass:        creationProps.Mass,
 			InverseMass: 1 / creationProps.Mass,
+		}
+		obsProps := models.ObstacleProps{
+			XAmplitude: creationProps.XAmplitude,
+			YAmplitude: creationProps.YAmplitude,
+			XFrequency: creationProps.XFrequency,
+			YFrequency: creationProps.YFrequency,
 		}
 
 		xOffset := bounds.Width / float32(board.ColumnNumber+1)
@@ -82,6 +85,7 @@ func BuildObstacles(props *models.CreationObstacles, board *models.BoardProps, b
 				}
 
 				obstacle := models.NewBall(xPos, yPos, true, true, true, ballProps)
+				obstacle.ObstacleProps = obsProps
 				obstacles = append(obstacles, obstacle)
 			}
 		}

@@ -19,6 +19,8 @@ func PlotHistogram(saveRoute, dataRoute string) {
 
 	var data []float64
 	scanner := bufio.NewScanner(file)
+
+	scanner.Scan()
 	for scanner.Scan() {
 		line := scanner.Text()
 		parts := strings.Split(line, "\t")
@@ -33,21 +35,24 @@ func PlotHistogram(saveRoute, dataRoute string) {
 		data = append(data, value)
 	}
 
-	p := plot.New()
-	v := make(plotter.Values, len(data))
+	var v plotter.Values
 	for i := 0; i < len(data); i++ {
-		v[i] = data[i]
+		v = append(v, data[i])
 	}
 
-	h, err := plotter.NewHist(v, len(data))
+	p := plot.New()
+	p.Title.Text = "histogram plot"
+
+	lenght := vg.Length(len(v))
+
+	h, err := plotter.NewBarChart(v, lenght)
 	if err != nil {
 		panic(err)
 	}
 
-	h.Normalize(1)
 	p.Add(h)
 
-	err = p.Save(4*vg.Inch, 4*vg.Inch, saveRoute)
+	err = p.Save(20*vg.Inch, 30*vg.Inch, saveRoute)
 	if err != nil {
 		panic(err)
 	}

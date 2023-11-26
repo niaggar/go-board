@@ -2,7 +2,14 @@ package models
 
 import (
 	"go-board/utils/gmath"
+	"math"
 )
+
+type ObstacleProps struct {
+	XAmplitude, YAmplitude float32
+	XFrequency, YFrequency float32
+	CurrentTime            float32
+}
 
 type BallProps struct {
 	Damping     float32
@@ -13,11 +20,12 @@ type BallProps struct {
 
 type Ball struct {
 	BallProps
+	ObstacleProps
 	Position gmath.Vector
 	Velocity gmath.Vector
 	Force    gmath.Vector
-	Active   bool // Seguir actualizando sus posiciones y detectando colisiones
-	Static   bool // Objeto no se mueve
+	Active   bool
+	Static   bool
 	Obstacle bool
 }
 
@@ -38,6 +46,14 @@ func (ball *Ball) Update(dt float32) {
 		return
 	}
 
+	if ball.Obstacle {
+		ball.updateObstacle(dt)
+	} else {
+		ball.updateBall(dt)
+	}
+}
+
+func (ball *Ball) updateBall(dt float32) {
 	newVelocity := gmath.Scale(ball.Force, ball.InverseMass*dt)
 	ball.Velocity = gmath.Add(ball.Velocity, newVelocity)
 
@@ -45,6 +61,18 @@ func (ball *Ball) Update(dt float32) {
 	ball.Position = gmath.Add(ball.Position, newPosition)
 
 	ball.Force = gmath.NewVector(0, 0)
+}
+
+func (ball *Ball) updateObstacle(dt float32) {
+	ball.CurrentTime += dt
+
+	xFunction := SinusoidalFunction(ball.CurrentTime, ball.XFrequency, ball.XAmplitude)
+	yFunction := SinusoidalFunction(ball.CurrentTime, ball.YFrequency, ball.YAmplitude)
+
+	xNew := ball.Position.X + xFunction
+	yNew := ball.Position.Y + yFunction
+
+	ball.Position = gmath.Vector{X: xNew, Y: yNew}
 }
 
 func (ball *Ball) ApplyForce(f *gmath.Vector) {
@@ -61,4 +89,8 @@ func (ball *Ball) SetVelocity(vx, vy float32) {
 
 func (ball *Ball) SetPosition(x, y float32) {
 	ball.Position = gmath.Vector{X: x, Y: y}
+}
+
+func SinusoidalFunction(x, w, a float32) float32 {
+	return a * float32(math.Sin(float64(x*w)))
 }

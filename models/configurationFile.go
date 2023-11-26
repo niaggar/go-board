@@ -28,6 +28,8 @@ type CreationObstacles struct {
 			Range    MinMax
 			TimeStep MinMax
 		}
+		XAmplitude, YAmplitude float32
+		XFrequency, YFrequency float32
 	}
 }
 
