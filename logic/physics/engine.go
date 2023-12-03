@@ -72,6 +72,14 @@ func (e *Engine) validateCollisionsParallel() {
 	verDivSize := e.Mesh.Rows / utils.GridParallelDivisionVertical
 	horDivSize := e.Mesh.Columns / utils.GridParallelDivisionHorizontal
 
+	if verDivSize == 0 {
+		verDivSize = 1
+	}
+
+	if horDivSize == 0 {
+		horDivSize = 1
+	}
+
 	var wg sync.WaitGroup
 
 	for sectVer := 0; sectVer <= utils.GridParallelDivisionVertical; sectVer++ {

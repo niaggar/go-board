@@ -1,4 +1,4 @@
 package utils
 
-const GridParallelDivisionVertical = 15
-const GridParallelDivisionHorizontal = 15
+const GridParallelDivisionVertical = 40
+const GridParallelDivisionHorizontal = 40

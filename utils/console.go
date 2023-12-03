@@ -50,6 +50,7 @@ func SelectConfigsFiles(files *map[int]string) []int {
 	}
 
 	selected = ParseSelection(selection)
+
 	return selected
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go-board/logic"
 	"go-board/logic/config"
+	"go-board/models"
 	"go-board/utils"
 	"go-board/utils/export"
 	"log"
@@ -22,7 +23,8 @@ func RunConsole() {
 	startTime := time.Now()
 	fmt.Printf("\nRunning %d experiments at %s\n", len(configsSelected), startTime.Format("2006-01-02-15-04-05"))
 	for val := range configsSelected {
-		gbConfigRoute := configsRoute + "/" + configsFiles[val]
+		current := configsSelected[val]
+		gbConfigRoute := configsRoute + "/" + configsFiles[current]
 
 		wg.Add(1)
 		go executeGaltonBoard(gbConfigRoute, exportRoute, &wg)
@@ -56,22 +58,30 @@ func executeGaltonBoard(gbConfigRoute, exportRoute string, wg *sync.WaitGroup) {
 	for i := 0; i < gbConfig.Experiment.Executions; i++ {
 		wgInternal.Add(1)
 
-		go func(pos int, baseRouteWg string) {
+		go func(pos int, baseRouteWg string, config models.ConfigurationFile) {
 			defer wgInternal.Done()
+
+			shouldPrintPath := config.Experiment.ExportPaths.Active
+			if pos == 0 {
+				config.Experiment.ExportPaths.Active = shouldPrintPath
+			} else {
+				config.Experiment.ExportPaths.Active = false
+			}
 
 			exportHistoRoute := baseRouteWg + fmt.Sprintf("/histo-%d.dat", pos)
 			exportPathRoute := baseRouteWg + fmt.Sprintf("/path-%d.dat", pos)
 			exportHistoImg := baseRouteWg + fmt.Sprintf("/histo-%d.png", pos)
 
-			gbConfig.Experiment.ExportHistogram.Route = exportHistoRoute
-			gbConfig.Experiment.ExportPaths.Route = exportPathRoute
+			config.Experiment.ExportHistogram.Route = exportHistoRoute
+			config.Experiment.ExportPaths.Route = exportPathRoute
 
-			gb := logic.NewGaltonBoard(&gbConfig)
+			gb := logic.NewGaltonBoard(&config)
 			gb.RunAll()
 			gb.Finish()
 
 			export.PlotHistogram(exportHistoImg, exportHistoRoute)
-		}(i, baseRoute)
+			fmt.Printf("FIN --%s-- INTENTO --%d--\n", config.Experiment.Name, pos)
+		}(i, baseRoute, gbConfig)
 	}
 
 	wgInternal.Wait()

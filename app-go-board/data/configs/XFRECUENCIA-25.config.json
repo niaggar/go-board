@@ -1,0 +1,100 @@
+{
+  "Experiment": {
+    "Name": "XFRECUENCIA-25",
+    "FrameRate": 5,
+    "CreationFrame": 1,
+    "CreationNum": 1,
+    "Executions": 1000,
+    "ExportPaths": {
+      "Active": true,
+      "Route": ""
+    },
+    "ExportHistogram": {
+      "Active": true,
+      "Route": ""
+    }
+  },
+  "Board": {
+    "CellSize": 5.0,
+    "RowNumber": 30,
+    "ColumnNumber": 30,
+    "Damping": 0.4
+  },
+  "Simulation": {
+    "TimeStep": 0.01,
+    "SubSteps": 4,
+    "Gravity": {
+      "X": 0.0,
+      "Y": -9.81
+    },
+    "MaxSize": 4.0,
+    "Collisions": false,
+    "Stop": {
+      "MaxTime": 150.0,
+      "TouchGround": true
+    }
+  },
+  "Balls": {
+    "Existing": [],
+    "Creation": {
+      "Enabled": true,
+      "Count": 500,
+      "Damping": 0.4,
+      "Mass": 1.0,
+      "Radius": {
+        "Min": 0.4,
+        "Max": 0.4
+      },
+      "Position": {
+        "X": {
+          "Min": -3.0,
+          "Max": 3.0
+        },
+        "Y": {
+          "Min": 0.0,
+          "Max": 0.0
+        }
+      },
+      "Velocity": {
+        "X": {
+          "Min": 0,
+          "Max": 0
+        },
+        "Y": {
+          "Min": -4.0,
+          "Max": 0.0
+        }
+      }
+    }
+  },
+  "Obstacles": {
+    "Existing": [],
+    "Creation": {
+      "Enabled": true,
+      "Damping": 0.23,
+      "Mass": 10000.0,
+      "XAmplitude": 0.5,
+      "YAmplitude": 0,
+      "XFrequency": 25,
+      "YFrequency": 100,
+      "Radius": {
+        "Range": {
+          "Min": 1.0,
+          "Max": 1.0
+        },
+        "Direction": 1
+      },
+      "Movement": {
+        "Enabled": false,
+        "Range": {
+          "Min": -2.0,
+          "Max": 2.0
+        },
+        "TimeStep": {
+          "Min": 0.02,
+          "Max": 0.05
+        }
+      }
+    }
+  }
+}
